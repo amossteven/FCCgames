@@ -41,8 +41,10 @@ The games share one theme, matched to the Film Crew Collective website: cream ba
 ```
 index.html                 launcher
 shared/fcc.css             FCC brand theme (colours, type, buttons, cards)
-shared/fcc.js              play-by-message engine shared by every game
+shared/fcc.js              play-by-message engine shared by every game (incl. embed mode)
 games/*.html               one self-contained page per game
+docs/                      chat-integration plan and embed demo
+package.json, railway.json, serve.json   static hosting on Railway
 ```
 
 ### The engine (`shared/fcc.js`)
@@ -58,9 +60,18 @@ Each game calls `FCC.app({ id, title, emoji, blurb, howTo, newState, renderTurn,
 
 Adding a sixth game is ~150 lines: define `newState(players, seed)`, render the current player's turn, and call `api.commit({ by, text })` when the move is made.
 
+## Inside the FCC website chat
+
+The engine has an **embed mode** so the site can host a game in a frame with both members' names filled in and receive each move by `postMessage` instead of copy and paste. The protocol and the website work are in [docs/CHAT-INTEGRATION.md](docs/CHAT-INTEGRATION.md); [docs/embed-demo.html](docs/embed-demo.html) is a working parent page.
+
 ## Hosting
 
-**GitHub Pages (recommended)**
+**Railway**
+
+The repo includes `package.json` (serves the folder with `serve`), `railway.json` and `serve.json`. Add the repo as a Railway service and it deploys as-is. It needs **no variables**: Railway supplies `PORT`. Health check is `/health.txt`.
+
+
+**GitHub Pages**
 
 1. Create a repo, push this folder.
 2. Settings → Pages → Deploy from branch → `main` / root.

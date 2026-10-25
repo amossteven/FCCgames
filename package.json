@@ -1,0 +1,14 @@
+{
+  "name": "fcc-games",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Play-by-message UK film & TV games for the Film Crew Collective",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "serve . -l tcp://0.0.0.0:${PORT:-3000} --no-clipboard --no-request-logging",
+    "dev": "serve . -l 8765"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  }
+}

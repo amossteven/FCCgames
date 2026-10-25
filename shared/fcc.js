@@ -45,6 +45,21 @@
   FCC.shuffle = (arr, rand) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   FCC.gameId = () => Math.random().toString(36).slice(2, 8);
 
+  /* ---------- embed mode (the FCC website hosts a game in a frame) ----------
+   * ?embed=1            hide the site chrome, send moves to the parent page instead of the copy panel
+   * &origin=https://…   the parent page's origin (messages are only posted to it)
+   * &p0=Steve&p1=Jo     player names (no name form is shown)
+   * &me=0|1             which seat the viewer holds; the other seat's turn shows a waiting screen
+   * &new=1              start a fresh game (no state in the hash)
+   * Messages to the parent: {v:1, type:'fcc:ready'|'fcc:height'|'fcc:move'|'fcc:rematch', …}
+   */
+  const Q = new URLSearchParams(location.search);
+  const EMBED = Q.get('embed') === '1';
+  const PARENT_ORIGIN = Q.get('origin') || '*';
+  const ME = EMBED && Q.has('me') ? Number(Q.get('me')) : null;
+  const post = msg => { if (EMBED && window.parent !== window) { try { window.parent.postMessage(Object.assign({ v: 1 }, msg), PARENT_ORIGIN); } catch (e) { /* ignore */ } } };
+  FCC.embed = EMBED; FCC.post = post; FCC.me = ME;
+
   /* ---------- sound ---------- */
   let ctx = null;
   FCC.muted = localStorage.getItem('fcc-muted') === '1';
@@ -111,7 +126,7 @@
     if (!root) return;
     const mute = h('button', { class: 'btn sm ghost', title: 'Toggle sound', onClick: () => { FCC.muted = !FCC.muted; localStorage.setItem('fcc-muted', FCC.muted ? '1' : '0'); mute.textContent = FCC.muted ? '🔇' : '🔊'; if (!FCC.muted) FCC.sfx.click(); } }, FCC.muted ? '🔇' : '🔊');
     root.append(h('div', { class: 'bar' },
-      h('a', { class: 'back', href: '../index.html' }, '◀ FCC GAMES'),
+      EMBED ? null : h('a', { class: 'back', href: '../index.html' }, '◀ FCC GAMES'),
       h('div', { class: 'title' }, h('span', { style: { marginRight: '10px' } }, cfg.emoji), cfg.title),
       mute));
   }
@@ -171,6 +186,13 @@
 
   function overPanel(cfg, state) {
     const w = state.over.winner;
+    if (EMBED) {
+      return h('div', { class: 'panel accent center' },
+        h('h1', {}, w == null ? '🤝 DRAW!' : `🏆 ${state.p[w]} WINS!`),
+        state.over.reason ? h('p', {}, state.over.reason) : null,
+        h('div', { class: 'row', style: { marginTop: '12px', justifyContent: 'center' } },
+          h('button', { class: 'btn primary', onClick: () => { FCC.sfx.click(); post({ type: 'fcc:rematch', game: cfg.id }); } }, '🔁 REMATCH')));
+    }
     const msg = message(cfg, state);
     const btn = h('button', { class: 'btn green', onClick: async () => { const ok = await FCC.copy(msg); btn.textContent = ok ? '✓ COPIED' : 'Copy failed'; } }, '📋 COPY RESULT');
     const rematch = h('a', { class: 'btn yellow', href: FCC.baseUrl() + '#' + FCC.encode(cfg.newState([state.p[1], state.p[0]], FCC.seed(), cfg)), onClick: () => setTimeout(() => location.reload(), 10) }, '🔁 REMATCH (loser starts)');
@@ -179,6 +201,17 @@
       state.over.reason ? h('p', {}, state.over.reason) : null,
       h('div', { class: 'msgbox', style: { textAlign: 'left' } }, msg),
       h('div', { class: 'row', style: { marginTop: '12px', justifyContent: 'center' } }, btn, rematch, h('a', { class: 'btn ghost', href: FCC.baseUrl() }, '✨ NEW GAME')));
+  }
+
+  function sentPanel(state) {
+    return h('div', { class: 'panel good' },
+      h('h2', {}, '✅ Move sent'),
+      h('p', {}, state.over ? 'The result has been posted to your conversation.' : `${state.p[state.n]} has been told it's their turn. You can go back to the chat.`));
+  }
+  function waitingPanel(state) {
+    return h('div', { class: 'panel' },
+      h('h2', {}, '⏳ Waiting for ', state.p[state.n]),
+      h('p', { class: 'muted' }, `It's ${state.p[state.n]}'s move. You'll get a message in the chat when they've played.`));
   }
 
   function replayPanel(state) {
@@ -194,6 +227,11 @@
     const root = document.getElementById('app');
     header(cfg);
     let state = FCC.loadState();
+    if (!state && EMBED && Q.get('new') === '1') {
+      state = cfg.newState([Q.get('p0') || 'Player 1', Q.get('p1') || 'Player 2'], FCC.seed(), cfg);
+      state.g = cfg.id; state.id = FCC.gameId(); state.t = 0; state.n = state.n || 0;
+      FCC.setHash(state);
+    }
     const api = {
       get state() { return state; },
       commit(last) {
@@ -201,6 +239,8 @@
         state.last = last;
         FCC.setHash(state);
         localStorage.setItem('fcc-sent-' + state.id, FCC.encode(state));
+        post({ type: 'fcc:move', game: cfg.id, title: cfg.title, emoji: cfg.emoji, id: state.id, turn: state.t,
+          text: last.text, next: state.over ? null : state.n, over: state.over || null, players: state.p, state });
         if (state.over) {
           if (state.over.winner === last.by) { FCC.sfx.win(); FCC.confetti(); } else if (state.over.winner == null) FCC.sfx.good(); else FCC.sfx.lose();
         }
@@ -230,18 +270,28 @@
         if (!justMoved && state.over.winner != null && state.over.winner !== state.last.by) { /* opener is the winner */ FCC.confetti(); }
         return;
       }
-      const sent = localStorage.getItem('fcc-sent-' + state.id) === FCC.encode(state);
-      if (justMoved || sent) {
-        root.append(sharePanel(cfg, state, justMoved));
-        if (cfg.renderBoard) root.append(cfg.renderBoard(state));
-        root.append(howTo(cfg));
-        return;
+      if (EMBED) {
+        if (justMoved) { root.append(sentPanel(state)); if (cfg.renderBoard) root.append(cfg.renderBoard(state)); return; }
+        if (ME !== null && state.n !== ME) { root.append(waitingPanel(state)); root.append(replayPanel(state)); if (cfg.renderBoard) root.append(cfg.renderBoard(state)); root.append(howTo(cfg)); return; }
+      } else {
+        const sent = localStorage.getItem('fcc-sent-' + state.id) === FCC.encode(state);
+        if (justMoved || sent) {
+          root.append(sharePanel(cfg, state, justMoved));
+          if (cfg.renderBoard) root.append(cfg.renderBoard(state));
+          root.append(howTo(cfg));
+          return;
+        }
       }
       cfg.renderTurn(state, api, root);
       root.append(howTo(cfg));
     }
     render(false);
     window.addEventListener('hashchange', () => { state = FCC.loadState(); render(false); });
+    if (EMBED) {
+      post({ type: 'fcc:ready', game: cfg.id, id: state ? state.id : null });
+      const sendHeight = () => post({ type: 'fcc:height', height: document.documentElement.scrollHeight });
+      if (window.ResizeObserver) new ResizeObserver(sendHeight).observe(document.body); else setInterval(sendHeight, 1000);
+    }
   };
 
   window.FCC = FCC;
