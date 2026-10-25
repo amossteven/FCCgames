@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spoiler Alert · FCC Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/fcc.css?v=2">
+<style>
+.rows{display:flex;flex-direction:column;gap:6px;align-items:center}
+.wrow{display:flex;gap:5px}
+.tile{width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:18px;border:2px solid var(--line);border-radius:8px;background:#fff;color:var(--text)}
+.tile.g{background:var(--green);color:#fff;border-color:var(--green)}
+.tile.y{background:var(--yellow);color:#1B1B1B;border-color:var(--yellow)}
+.tile.x{background:#CFC9C1;color:#6B665F;border-color:#CFC9C1}
+.tile.empty{border-style:dashed;border-color:#B9B3AA;background:transparent}
+.tile.flip{animation:flip .5s both}
+@keyframes flip{0%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+@media (max-width:560px){.tile{width:30px;height:30px;font-size:13px;border-radius:6px}}
+.keys{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:8px}
+.key{font-weight:800;font-size:12px;padding:8px 0;width:30px;text-align:center;border-radius:6px;background:#fff;color:var(--text);border:2px solid var(--line)}
+.key.g{background:var(--green);color:#fff;border-color:var(--green)}.key.y{background:var(--yellow);border-color:var(--yellow)}.key.x{opacity:.3}
+.boards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:640px){.boards{grid-template-columns:1fr}}
+.guessbox{display:flex;gap:8px}
+.guessbox input{text-transform:uppercase;letter-spacing:.3em;font-size:22px;font-weight:700}
+</style>
+</head>
+<body>
+<div id="fcc-header"></div>
+<main id="app" class="wrap"></main>
+<script src="../shared/fcc.js?v=3"></script>
+<script>
+/* Single-word British film & TV titles, 5–11 letters */
+const TITLES = ['SKYFALL','SHERLOCK','FLEABAG','LUTHER','SPACED','GHOSTS','DUNKIRK','PRIDE','BOTTOM','SPOOKS','SHAMELESS','BLACKADDER','TASKMASTER','PADDINGTON','EASTENDERS','HOLLYOAKS','OUTNUMBERED','BRASSIC','UTOPIA','MISFITS','SKINS','BODYGUARD','SNATCH','KINGSMAN','SUBMARINE','CALVARY','ATONEMENT','BELFAST','PHILOMENA','HUNGER','SIGHTSEERS','MERLIN','PRIMEVAL','TORCHWOOD','CRACKER','MORSE','LEWIS','ENDEAVOUR','POLDARK','HUSTLE','SHETLAND','BROADCHURCH','DOCTORS','CASUALTY','PORRIDGE','MINDER','BERGERAC','CATASTROPHE','CHERNOBYL','TOMMY','BRAZIL','SUNSHINE','HARLOTS'].filter(t => t.length >= 5 && t.length <= 11);
+const MAX_G = 8;
+const key = s => s.id + ':' + s.seed;
+const secret = (s, i) => s.sec[i] ? FCC.deobf(s.sec[i], key(s)) : null;
+
+function newState(players, seed) { return { p: players, seed, sec: [null, null], gu: [[], []], n: 0 }; }
+
+function feedback(guess, target) {
+  const f = Array(target.length).fill('x'), left = {};
+  for (let i = 0; i < target.length; i++) { if (guess[i] === target[i]) f[i] = 'g'; else left[target[i]] = (left[target[i]] || 0) + 1; }
+  for (let i = 0; i < target.length; i++) { if (f[i] === 'g') continue; if (left[guess[i]]) { f[i] = 'y'; left[guess[i]]--; } }
+  return f.join('');
+}
+
+function boardEl(state, who, len, animateLast) {
+  const guesses = state.gu[who];
+  const rows = FCC.h('div', { class: 'rows' });
+  for (let r = 0; r < MAX_G; r++) {
+    const row = FCC.h('div', { class: 'wrow' });
+    const g = guesses[r];
+    for (let i = 0; i < len; i++) {
+      if (g) row.append(FCC.h('div', { class: 'tile ' + g.f[i] + (animateLast && r === guesses.length - 1 ? ' flip' : ''), style: animateLast && r === guesses.length - 1 ? { animationDelay: (i * 80) + 'ms' } : null }, g.w[i]));
+      else row.append(FCC.h('div', { class: 'tile empty' }, ''));
+    }
+    rows.append(row);
+  }
+  return rows;
+}
+function keysEl(guesses) {
+  const st = {};
+  for (const g of guesses) for (let i = 0; i < g.w.length; i++) { const c = g.w[i], f = g.f[i]; if (f === 'g' || (f === 'y' && st[c] !== 'g') || (!st[c])) st[c] = f; }
+  const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+  return FCC.h('div', {}, rows.map(r => FCC.h('div', { class: 'keys' }, [...r].map(c => FCC.h('span', { class: 'key ' + (st[c] || '') }, c)))));
+}
+
+function pickSecretPanel(state, me, onPick) {
+  const byLen = {};
+  TITLES.forEach(t => (byLen[t.length] = byLen[t.length] || []).push(t));
+  const sel = FCC.h('select', {}, FCC.h('option', { value: '' }, '— pick a title from the list —'),
+    Object.keys(byLen).sort((a, b) => a - b).map(l => FCC.h('optgroup', { label: `${l} letters` }, byLen[l].sort().map(t => FCC.h('option', { value: t }, t)))));
+  const custom = FCC.h('input', { type: 'text', maxlength: 11, placeholder: '…or type your own one-word title (5–11 letters)' });
+  const err = FCC.h('div', { class: 'small', style: { color: 'var(--red)', minHeight: '24px' } });
+  const go = () => {
+    const w = (custom.value.trim() || sel.value).toUpperCase().replace(/[^A-Z]/g, '');
+    if (w.length < 5 || w.length > 11) { err.textContent = 'Needs to be one word, 5–11 letters, A–Z only.'; FCC.sfx.bad(); return; }
+    FCC.sfx.good(); onPick(w);
+  };
+  return FCC.h('div', { class: 'panel accent' },
+    FCC.h('h2', {}, `${state.p[me]}, choose your secret title`),
+    FCC.h('p', {}, `${state.p[1 - me]} will try to guess it letter by letter. Choose something British, something sneaky.`),
+    FCC.h('div', { class: 'field' }, sel), FCC.h('div', { class: 'field' }, custom), err,
+    FCC.h('button', { class: 'btn primary', onClick: go }, '🤫 LOCK IN SECRET'));
+}
+
+function renderTurn(state, api, root) {
+  const me = state.n, you = 1 - me;
+  root.append(FCC.replayPanel(state));
+  if (!state.sec[me]) {
+    root.append(pickSecretPanel(state, me, w => {
+      state.sec[me] = FCC.obf(w, key(state));
+      if (me === 0) { state.n = 1; api.commit({ by: 0, text: `${state.p[0]} has chosen a ${w.length}-letter title. Pick yours and take the first guess!` }); }
+      else api.rerender();
+    }));
+    return;
+  }
+  const target = secret(state, you), len = target.length;
+  const panel = FCC.h('div', { class: 'panel accent' });
+  const input = FCC.h('input', { type: 'text', maxlength: len, placeholder: '•'.repeat(len), autocomplete: 'off', spellcheck: 'false' });
+  const err = FCC.h('div', { class: 'small', style: { color: 'var(--red)', minHeight: '24px' } });
+  const submit = () => {
+    const w = input.value.toUpperCase().replace(/[^A-Z]/g, '');
+    if (w.length !== len) { err.textContent = `Needs exactly ${len} letters.`; FCC.sfx.bad(); input.classList.add('shake'); setTimeout(() => input.classList.remove('shake'), 400); return; }
+    const f = feedback(w, target);
+    state.gu[me].push({ w, f });
+    const solved = f === 'g'.repeat(len);
+    let text = `${state.p[me]} guessed ${w} — ${solved ? '🎉 SPOT ON!' : `${[...f].filter(c => c === 'g').length} green, ${[...f].filter(c => c === 'y').length} yellow`}`;
+    const mySolved = solved, theirSolved = state.gu[you].some(g => g.f === 'g'.repeat(g.f.length));
+    // Round ends after player 1 guesses (both have had equal goes)
+    if (me === 1) {
+      if (mySolved && theirSolved) state.over = { winner: null, reason: `Both titles cracked in ${state.gu[1].length} guesses. Honours even!` };
+      else if (mySolved) state.over = { winner: 1, reason: `${state.p[1]} cracked "${target}" in ${state.gu[1].length}.` };
+      else if (theirSolved) state.over = { winner: 0, reason: `${state.p[0]} cracked "${secret(state, 0 === me ? you : me)}" first.` };
+      else if (state.gu[0].length >= MAX_G && state.gu[1].length >= MAX_G) state.over = { winner: null, reason: `Nobody cracked it. ${state.p[0]}'s was ${secret(state, 0)}, ${state.p[1]}'s was ${secret(state, 1)}.` };
+    } else if (mySolved) {
+      text += ` ${state.p[1]} gets one last guess to force a draw.`;
+    }
+    if (state.over && state.over.winner === 0) state.over.reason = `${state.p[0]} cracked "${secret(state, 1)}" first.`;
+    if (!state.over) state.n = you;
+    api.commit({ by: me, text });
+  };
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  input.addEventListener('input', () => FCC.sfx.tick());
+  const guessesLeft = MAX_G - state.gu[me].length;
+  panel.append(FCC.h('h2', {}, `Guess ${state.p[you]}'s ${len}-letter title`),
+    FCC.h('p', { class: 'small muted' }, `🟩 right letter, right place · 🟨 right letter, wrong place · ${guessesLeft} guess${guessesLeft === 1 ? '' : 'es'} left`),
+    boardEl(state, me, len, false), keysEl(state.gu[me]),
+    FCC.h('div', { class: 'guessbox', style: { marginTop: '12px' } }, input, FCC.h('button', { class: 'btn primary', onClick: submit }, 'GUESS')), err);
+  root.append(panel);
+  const mine = secret(state, me);
+  root.append(FCC.h('div', { class: 'panel' },
+    FCC.h('h3', {}, `${state.p[you]}'s guesses at YOUR title (${mine})`),
+    boardEl(state, you, mine.length, true)));
+  setTimeout(() => input.focus(), 50);
+}
+
+function renderBoard(state) {
+  const wrap = FCC.h('div', { class: 'panel' });
+  if (!state.sec[0] || !state.sec[1]) return wrap;
+  const s0 = secret(state, 0), s1 = secret(state, 1);
+  wrap.append(FCC.h('div', { class: 'boards' },
+    FCC.h('div', {}, FCC.h('h3', {}, `${state.p[0]} guessing ${state.over ? s1 : s1.length + ' letters'}`), boardEl(state, 0, s1.length, false)),
+    FCC.h('div', {}, FCC.h('h3', {}, `${state.p[1]} guessing ${state.over ? s0 : s0.length + ' letters'}`), boardEl(state, 1, s0.length, false))));
+  return wrap;
+}
+
+FCC.app({
+  id: 'spoiler', title: 'Spoiler Alert', emoji: '🤫',
+  blurb: 'A Wordle duel. Each of you hides a one-word British film or TV title. Take turns guessing — first to crack the other\'s wins.',
+  howTo: `<ul>
+    <li>Both players secretly pick a one-word British film or TV title (5–11 letters) — from our list or your own.</li>
+    <li>Take turns guessing your opponent's title. Green tiles are right letter, right place; yellow are right letter, wrong place.</li>
+    <li>You can see your opponent's guesses at your title too, so you know how close they are. Sweat accordingly.</li>
+    <li>First to crack it wins. If the player who went first cracks it, the other gets one final guess to force a draw. Eight guesses each.</li>
+  </ul>`,
+  newState, renderTurn, renderBoard
+});
+</script>
+</body>
+</html>

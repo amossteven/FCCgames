@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Channel Hopper · FCC Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/fcc.css?v=2">
+<style>
+.tv{background:#1B1B1B;border:6px solid var(--orange);border-radius:18px;padding:12px;box-shadow:var(--shadow);color:#EFEBE4}
+.tv h3{margin:4px 0 12px;text-align:center;color:#EFEBE4}
+.sched{display:grid;grid-template-columns:78px repeat(8,1fr);gap:4px;font-size:13px}
+@media (max-width:560px){.sched{grid-template-columns:54px repeat(8,1fr);font-size:11px}}
+.sched .hd{color:#A8A39B;text-align:center;font-weight:700;font-size:10px;padding:4px 0;align-self:center}
+.sched .ch{color:var(--orange);font-weight:800;font-size:10px;letter-spacing:.04em;display:flex;align-items:center;padding-left:2px;line-height:1.2}
+.cell{aspect-ratio:1;background:#2A2A2A;border:2px solid #3A3A3A;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;position:relative;user-select:none}
+.cell.fire{cursor:crosshair}
+.cell.fire:hover{border-color:var(--orange);background:#4A2E22}
+.cell.prog{background:#4A4A4A;border-color:#6A6A6A}
+.cell.hit{background:#8A2E22;border-color:var(--red)}
+.cell.hit::after{content:"💥";font-size:16px}
+.cell.miss::after{content:"";width:8px;height:8px;border-radius:50%;background:#6B665F}
+.cell.sunk{background:#5A1C14;border-color:var(--red);opacity:.9}
+.cell.new{box-shadow:0 0 0 3px var(--yellow)}
+.cell .ico{font-size:14px;position:absolute;left:2px;top:1px;opacity:.95}
+.listing{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.listing .pr{font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;background:#EFEBE4;color:#1B1B1B;border:2px solid #EFEBE4}
+.listing .pr.off{text-decoration:line-through;color:#fff;background:var(--red);border-color:var(--red)}
+.shotlog{font-weight:700;font-size:14px;line-height:1.9;color:var(--text);margin-top:12px}
+</style>
+</head>
+<body>
+<div id="fcc-header"></div>
+<main id="app" class="wrap"></main>
+<script src="../shared/fcc.js?v=3"></script>
+<script>
+const CH = ['BBC ONE', 'BBC TWO', 'ITV1', 'CH 4', 'CH 5', 'DAVE'];
+const SLOTS = ['6:00', '6:30', '7:00', '7:30', '8:00', '8:30', '9:00', '9:30'];
+const ROWS = CH.length, COLS = SLOTS.length, N = ROWS * COLS;
+const PROGS = [
+  { name: 'Saturday Night Film', len: 4, icon: '🎬' },
+  { name: 'Strictly', len: 3, icon: '💃' },
+  { name: 'Bake Off', len: 3, icon: '🧁' },
+  { name: 'Corrie', len: 2, icon: '🏘️' },
+  { name: 'Have I Got News', len: 2, icon: '📰' },
+];
+const TOTAL_CELLS = PROGS.reduce((a, p) => a + p.len, 0);
+const SHOTS_PER_TURN = 2;
+
+const cellName = i => `${CH[Math.floor(i / COLS)]} ${SLOTS[i % COLS]}`;
+const key = s => s.id + ':' + s.seed;
+
+function randomBoard(rand) {
+  const b = Array(N).fill('.');
+  PROGS.forEach((p, idx) => {
+    for (let tries = 0; tries < 500; tries++) {
+      const r = Math.floor(rand() * ROWS), c = Math.floor(rand() * (COLS - p.len + 1));
+      let ok = true;
+      for (let k = -1; k <= p.len; k++) { const cc = c + k; if (cc < 0 || cc >= COLS) continue; if (b[r * COLS + cc] !== '.') { ok = false; break; } }
+      if (!ok) continue;
+      for (let k = 0; k < p.len; k++) b[r * COLS + c + k] = String(idx);
+      return;
+    }
+  });
+  return b.join('');
+}
+
+function newState(players, seed) {
+  return { p: players, seed, b: [null, null], s: [[], []], n: 0 };
+}
+const board = (state, i) => state.b[i] ? FCC.deobf(state.b[i], key(state)) : null;
+const sunkProgs = (b, shots) => PROGS.map((p, idx) => {
+  const cells = []; for (let i = 0; i < N; i++) if (b[i] === String(idx)) cells.push(i);
+  return cells.every(c => shots.includes(c));
+});
+const hitsOn = (b, shots) => shots.filter(i => b[i] !== '.').length;
+
+/* Render a schedule grid. mode: 'own' (show programmes + enemy shots) | 'enemy' (fog + my shots) | 'place' */
+function grid(state, title, b, shots, mode, onFire, newCells = []) {
+  const g = FCC.h('div', { class: 'sched' });
+  g.append(FCC.h('div', { class: 'hd' }, ''));
+  SLOTS.forEach(s => g.append(FCC.h('div', { class: 'hd' }, s)));
+  const sunk = b ? sunkProgs(b, shots) : [];
+  for (let r = 0; r < ROWS; r++) {
+    g.append(FCC.h('div', { class: 'ch' }, CH[r]));
+    for (let c = 0; c < COLS; c++) {
+      const i = r * COLS + c;
+      let cls = 'cell';
+      const shot = shots.includes(i);
+      const prog = b && b[i] !== '.' ? PROGS[+b[i]] : null;
+      const isSunk = prog && sunk[+b[i]];
+      if (mode !== 'enemy' && prog) cls += ' prog';
+      if (shot && prog) cls += isSunk ? ' hit sunk' : ' hit';
+      if (shot && !prog) cls += ' miss';
+      if (mode === 'enemy' && !shot && onFire) cls += ' fire';
+      if (newCells.includes(i)) cls += ' new';
+      const cell = FCC.h('div', { class: cls, title: cellName(i), onClick: mode === 'enemy' && !shot && onFire ? () => onFire(i) : null });
+      if (prog && (mode !== 'enemy' || isSunk)) cell.append(FCC.h('span', { class: 'ico' }, prog.icon));
+      g.append(cell);
+    }
+  }
+  const listing = FCC.h('div', { class: 'listing' }, PROGS.map((p, idx) => FCC.h('span', { class: 'pr' + (b && sunk[idx] ? ' off' : '') }, `${p.icon} ${p.name} (${p.len})`)));
+  return FCC.h('div', { class: 'tv' }, FCC.h('h3', {}, title), g, listing);
+}
+
+function renderTurn(state, api, root) {
+  const me = state.n, you = 1 - me;
+  root.append(FCC.replayPanel(state));
+
+  /* ---- placement phase ---- */
+  if (!state.b[me]) {
+    let rand = FCC.rng(FCC.seed());
+    let layout = randomBoard(rand);
+    const panel = FCC.h('div', { class: 'panel accent' });
+    const draw = () => {
+      panel.innerHTML = '';
+      panel.append(FCC.h('h2', {}, me === 0 ? 'Set your schedule' : 'Set your schedule, then fire!'),
+        FCC.h('p', {}, `Hide your five programmes in tonight's listings. ${state.p[you]} will try to find them by channel-hopping two slots a turn.`),
+        grid(state, 'YOUR SCHEDULE', layout, [], 'place'),
+        FCC.h('div', { class: 'row', style: { marginTop: '12px' } },
+          FCC.h('button', { class: 'btn yellow', onClick: () => { FCC.sfx.click(); layout = randomBoard(rand); draw(); } }, '🔀 SHUFFLE SCHEDULE'),
+          FCC.h('button', { class: 'btn primary', onClick: lock }, '🔒 LOCK IT IN')));
+    };
+    const lock = () => {
+      FCC.sfx.good();
+      state.b[me] = FCC.obf(layout, key(state));
+      if (me === 0) { state.n = 1; api.commit({ by: 0, text: `${state.p[0]} has set their schedule. Set yours and fire the first two shots!` }); }
+      else api.rerender();
+    };
+    draw(); root.append(panel);
+    return;
+  }
+
+  /* ---- firing phase ---- */
+  const enemy = board(state, you), mine = board(state, me);
+  const myShots = state.s[me], theirShots = state.s[you];
+  const fired = [];
+  const log = FCC.h('div', { class: 'shotlog' });
+  const panel = FCC.h('div', { class: 'panel accent' });
+  const lastCells = state.last && state.last.cells ? state.last.cells : [];
+
+  const draw = () => {
+    panel.innerHTML = '';
+    const left = SHOTS_PER_TURN - fired.length;
+    panel.append(FCC.h('h2', {}, left > 0 ? `Channel hop! ${left} shot${left > 1 ? 's' : ''} left` : 'Sending your move…'),
+      grid(state, `${state.p[you].toUpperCase()}'S SCHEDULE — tap a slot`, enemy, myShots, 'enemy', left > 0 ? fire : null, fired),
+      log);
+  };
+  const fire = i => {
+    myShots.push(i); fired.push(i);
+    const hit = enemy[i] !== '.';
+    const sunkNow = hit && sunkProgs(enemy, myShots)[+enemy[i]];
+    let line = `${cellName(i)} — `;
+    if (sunkNow) { line += `💥 ${PROGS[+enemy[i]].name} TAKEN OFF AIR!`; FCC.sfx.win(); }
+    else if (hit) { line += `📺 HIT! Something's on…`; FCC.sfx.good(); }
+    else { line += `static. Miss.`; FCC.sfx.bad(); }
+    log.append(FCC.h('div', {}, line));
+    const lines = Array.from(log.children).map(d => d.textContent);
+    const allSunk = hitsOn(enemy, myShots) === TOTAL_CELLS;
+    if (allSunk) {
+      state.over = { winner: me, reason: `${state.p[me]} found every programme in ${myShots.length} shots.` };
+      api.commit({ by: me, text: lines.join(' · '), cells: fired.slice() });
+      return;
+    }
+    draw();
+    if (fired.length >= SHOTS_PER_TURN) {
+      state.n = you;
+      setTimeout(() => api.commit({ by: me, text: lines.join(' · '), cells: fired.slice() }), 1100);
+    }
+  };
+  draw();
+  root.append(panel);
+  root.append(FCC.h('div', { class: 'panel' },
+    grid(state, 'YOUR SCHEDULE — their shots so far', mine, theirShots, 'own', null, lastCells),
+    FCC.h('p', { class: 'small muted center', style: { marginTop: '8px' } }, `They've hit ${hitsOn(mine, theirShots)} of your ${TOTAL_CELLS} slots · you've hit ${hitsOn(enemy, myShots)} of theirs`)));
+}
+
+function renderBoard(state) {
+  const wrap = FCC.h('div', {});
+  if (state.over) {
+    const w = state.over.winner;
+    wrap.append(FCC.h('div', { class: 'panel' },
+      grid(state, `${state.p[w].toUpperCase()}'S SCHEDULE`, board(state, w), state.s[1 - w], 'own'),
+      FCC.h('div', { style: { height: '12px' } }),
+      grid(state, `${state.p[1 - w].toUpperCase()}'S SCHEDULE`, board(state, 1 - w), state.s[w], 'own')));
+    return wrap;
+  }
+  // waiting view: show the sender's own schedule and what they've found
+  const me = 1 - state.n;
+  if (state.b[me]) wrap.append(FCC.h('div', { class: 'panel' },
+    state.b[1 - me] ? grid(state, `${state.p[1 - me].toUpperCase()}'S SCHEDULE — what you've found`, board(state, 1 - me), state.s[me], 'enemy') : null,
+    FCC.h('div', { style: { height: '12px' } }),
+    grid(state, 'YOUR SCHEDULE', board(state, me), state.s[1 - me], 'own')));
+  return wrap;
+}
+
+FCC.app({
+  id: 'hopper', title: 'Channel Hopper', emoji: '📺',
+  blurb: 'Battleships, but on tonight\'s TV listings. Hide five programmes across six channels, then channel-hop to find your opponent\'s before they find yours.',
+  howTo: `<ul>
+    <li>The grid is a night of telly: 6 channels × 8 half-hour slots from 6pm.</li>
+    <li>Each player hides five programmes in a row on a single channel: a 2-hour Film (4 slots), Strictly (3), Bake Off (3), Corrie (2) and Have I Got News (2). Hit Shuffle until you like the layout, then Lock it in.</li>
+    <li>On your turn you channel-hop <b>two</b> slots on your opponent's listings. Hit = you found something. Find every slot of a programme and it's taken off air.</li>
+    <li>First to take all five of the opponent's programmes off air wins.</li>
+    <li>The link hides your schedule, but it's a club game — no peeking at the code!</li>
+  </ul>`,
+  newState, renderTurn, renderBoard
+});
+</script>
+</body>
+</html>

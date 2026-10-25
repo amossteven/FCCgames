@@ -1,0 +1,79 @@
+/* FCC Games — theme matched to the Film Crew Collective website
+   cream background · near-black type · orange accent · pill buttons · bordered cards with hard shadows */
+:root{
+  --bg:#EFEBE4; --panel:#FBF9F6; --panel2:#E6E1D9; --line:#1B1B1B;
+  --text:#1B1B1B; --muted:#6B665F;
+  --orange:#E8632B; --orange-dark:#C94F1B; --green:#2E9E6B; --red:#D64533; --yellow:#F2B544; --blue:#2F6FB5;
+  --shadow:6px 6px 0 #1B1B1B;
+  --font-head:'Archivo Black', 'Arial Black', sans-serif; --font-body:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* legacy aliases used by some game styles */
+  --pink:var(--orange);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.5}
+body{min-height:100vh}
+a{color:var(--orange-dark)}
+h1,h2,h3{font-family:var(--font-head);text-transform:uppercase;letter-spacing:-.01em;line-height:1.1;margin:0 0 .6em;font-weight:400}
+h1{font-size:34px}
+h2{font-size:20px}
+h3{font-size:13px;letter-spacing:.06em;color:var(--muted)}
+.wrap{max-width:820px;margin:0 auto;padding:20px 16px 80px}
+#fcc-header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:2px solid var(--line)}
+#fcc-header .bar{max-width:820px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#fcc-header .title{font-family:var(--font-head);text-transform:uppercase;font-size:16px;flex:1;min-width:150px}
+#fcc-header a.back{font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--text);text-decoration:none;text-transform:uppercase}
+#fcc-header a.back:hover{color:var(--orange)}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:20px;margin:16px 0;box-shadow:var(--shadow)}
+.panel.accent{border:3px solid var(--orange)}
+.panel.good{border:3px solid var(--green)}
+.panel.warn{border:3px solid var(--yellow)}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.center{text-align:center}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row.between{justify-content:space-between}
+.grow{flex:1}
+.btn{font-family:var(--font-body);font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;padding:12px 22px;border:2px solid var(--line);border-radius:999px;background:var(--panel);color:var(--text);cursor:pointer;transition:transform .08s,box-shadow .08s,background .1s;text-decoration:none;display:inline-block;line-height:1.3}
+.btn:hover{transform:translateY(-2px);box-shadow:3px 3px 0 #1B1B1B}
+.btn:active{transform:translateY(0);box-shadow:none}
+.btn.primary{background:var(--orange);color:#1B1B1B}
+.btn.green{background:#1B1B1B;color:#fff}
+.btn.yellow{background:var(--panel);color:var(--orange-dark)}
+.btn.blue{background:var(--panel)}
+.btn.ghost{background:transparent}
+.btn.sm{font-size:12px;padding:8px 14px}
+.btn[disabled]{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+input[type=text],textarea,select{font-family:var(--font-body);font-size:17px;background:#fff;color:var(--text);border:2px solid var(--line);border-radius:12px;padding:12px 14px;width:100%}
+input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,99,43,.25)}
+textarea{resize:vertical;min-height:120px}
+label{display:block;color:var(--muted);margin-bottom:6px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.field{margin-bottom:14px}
+.banner{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;background:#1B1B1B;color:#fff;border-radius:999px;padding:10px 18px;margin:16px 0}
+.banner .vs{font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.banner .turn{font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--orange)}
+.badge{display:inline-block;font-weight:800;font-size:12px;letter-spacing:.04em;text-transform:uppercase;padding:5px 12px;border-radius:999px;background:var(--panel2);color:var(--text);border:2px solid var(--line)}
+.badge.p0{background:var(--orange);color:#1B1B1B;border-color:var(--orange)}
+.badge.p1{background:#fff;color:#1B1B1B;border-color:var(--line)}
+.replay{border-left:6px solid var(--orange);background:var(--panel);padding:12px 16px;margin:16px 0;border-radius:0 12px 12px 0;border-top:2px solid var(--line);border-right:2px solid var(--line);border-bottom:2px solid var(--line)}
+.replay .who{font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--orange-dark);margin-bottom:4px}
+.blink{animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:.2}}
+.pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.howto summary{cursor:pointer;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:4px 0}
+.howto ul{margin:10px 0 0 20px;padding:0}
+.howto li{margin:6px 0}
+.msgbox{background:#1B1B1B;color:#EFEBE4;border:2px dashed var(--orange);border-radius:12px;padding:14px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;white-space:pre-wrap;word-break:break-all;max-height:170px;overflow:auto}
+.footer{margin-top:40px;text-align:center;color:var(--muted);font-size:14px}
+.gamecard{display:block;text-decoration:none;color:var(--text);background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s}
+.gamecard:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 #1B1B1B;border-color:var(--orange)}
+.gamecard .emoji{font-size:44px;line-height:1}
+.gamecard h2{margin:12px 0 6px}
+.gamecard p{margin:0;color:#444}
+.gamecard .tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);border:2px solid var(--line);border-radius:999px;padding:4px 12px;margin-top:14px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.confetti{position:fixed;top:-10px;width:10px;height:10px;z-index:20;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.2}}
+@media (max-width:480px){html,body{font-size:16px} h1{font-size:26px} h2{font-size:17px} .btn{font-size:13px;padding:10px 16px} .panel{padding:16px;box-shadow:4px 4px 0 #1B1B1B}}

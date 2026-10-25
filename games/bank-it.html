@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bank It! · FCC Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/fcc.css?v=2">
+<style>
+.chain{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.link{font-weight:800;font-size:13px;padding:8px 14px;border-radius:999px;background:#fff;border:2px solid var(--line);color:var(--muted);min-width:64px;text-align:center}
+.link.done{background:var(--green);color:#fff;border-color:var(--green)}
+.link.cur{background:var(--orange);color:#1B1B1B;border-color:var(--orange);animation:blink 1.2s steps(2) infinite}
+.q{font-family:var(--font-head);font-size:22px;line-height:1.2;margin:14px 0 18px;text-transform:none}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.opts{grid-template-columns:1fr}}
+.opt{font-family:var(--font-body);font-weight:600;font-size:16px;text-align:left;padding:14px 16px;border:2px solid var(--line);border-radius:14px;background:#fff;color:var(--text);cursor:pointer;box-shadow:4px 4px 0 #1B1B1B;transition:transform .08s}
+.opt:hover{transform:translate(-1px,-1px);border-color:var(--orange)}
+.opt .l{font-weight:800;font-size:12px;color:var(--orange-dark);margin-right:10px}
+.opt.right{background:var(--green);color:#fff;border-color:var(--green)}
+.opt.wrong{background:var(--red);color:#fff;border-color:var(--red)}
+.opt[disabled]{cursor:default;transform:none}
+.scores{display:flex;justify-content:space-around;gap:12px;flex-wrap:wrap}
+.sc{text-align:center}
+.sc .amt{font-family:var(--font-head);font-size:30px;color:var(--orange-dark);margin-top:6px}
+.pot{text-align:center;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--green);margin:8px 0}
+.bar{height:12px;background:#fff;border:2px solid var(--line);border-radius:999px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--orange)}
+</style>
+</head>
+<body>
+<div id="fcc-header"></div>
+<main id="app" class="wrap"></main>
+<script src="../shared/fcc.js?v=3"></script>
+<script>
+/* [question, correct, wrong, wrong, wrong] */
+const Q = [
+ ['Who played the Doctor in the first series of the 2005 Doctor Who revival?','Christopher Eccleston','David Tennant','Matt Smith','Peter Capaldi'],
+ ['In which city is Peaky Blinders mainly set?','Birmingham','Manchester','Liverpool','Sheffield'],
+ ['Who directed Trainspotting (1996)?','Danny Boyle','Guy Ritchie','Ken Loach','Edgar Wright'],
+ ['Fawlty Towers is set in which seaside town?','Torquay','Brighton','Blackpool','Bournemouth'],
+ ['What is Del Boy and Rodney\'s surname in Only Fools and Horses?','Trotter','Boycie','Driscoll','Harris'],
+ ['What is the pub in EastEnders called?','The Queen Victoria','The Rovers Return','The Woolpack','The Nag\'s Head'],
+ ['Who played the title role in Blackadder?','Rowan Atkinson','Hugh Laurie','Stephen Fry','Tony Robinson'],
+ ['Which 1997 film follows unemployed Sheffield steelworkers who form a strip act?','The Full Monty','Brassed Off','Billy Elliot','Kinky Boots'],
+ ['Who created and starred in Fleabag?','Phoebe Waller-Bridge','Michaela Coel','Sharon Horgan','Aisling Bea'],
+ ['What is the anti-corruption unit in Line of Duty called?','AC-12','CID-9','MIT-7','AC-9'],
+ ['Which James Bond film was released in 2012, the franchise\'s 50th anniversary year?','Skyfall','Casino Royale','Spectre','Quantum of Solace'],
+ ['The UK version of The Office is set in which town?','Slough','Reading','Swindon','Watford'],
+ ['In Gavin & Stacey, Stacey is from which Welsh town?','Barry','Cardiff','Swansea','Newport'],
+ ['Who co-wrote and starred in Shaun of the Dead alongside Nick Frost?','Simon Pegg','Edgar Wright','Martin Freeman','Dylan Moran'],
+ ['Who plays Sherlock Holmes in the BBC\'s Sherlock?','Benedict Cumberbatch','Martin Freeman','Andrew Scott','Tom Hiddleston'],
+ ['Father Ted is set on which fictional island?','Craggy Island','Rugged Island','Misty Island','Holy Island'],
+ ['In Red Dwarf, what is the ship\'s computer called?','Holly','Kryten','Talkie Toaster','Queeg'],
+ ['Which 1994 romantic comedy stars Hugh Grant and Andie MacDowell?','Four Weddings and a Funeral','Notting Hill','Love Actually','About a Boy'],
+ ['In The Inbetweeners, which school do Will, Simon, Jay and Neil attend?','Rudge Park Comprehensive','Grange Hill','Waterloo Road','Abbey Grove'],
+ ['Who created Downton Abbey?','Julian Fellowes','Andrew Davies','Russell T Davies','Steven Moffat'],
+ ['Which film starring Colin Firth as George VI won Best Picture at the 2011 Oscars?','The King\'s Speech','The Queen','Darkest Hour','Atonement'],
+ ['What is Wallace\'s favourite cheese?','Wensleydale','Cheddar','Stilton','Red Leicester'],
+ ['Who is the Taskmaster in Taskmaster?','Greg Davies','Alex Horne','Bob Mortimer','Noel Fielding'],
+ ['In Happy Valley, Sarah Lancashire plays which police sergeant?','Catherine Cawood','Clare Cartwright','Vera Stanhope','Ellie Miller'],
+ ['Which 1969 film famously ends with a coach teetering over a cliff edge?','The Italian Job','Get Carter','Zulu','Carry On Camping'],
+ ['In Withnail and I, where do the pair go "on holiday by mistake"?','The Lake District','The Scottish Highlands','Cornwall','The Peak District'],
+ ['Hot Fuzz is set in which fictional village?','Sandford','Royston Vasey','Walmington-on-Sea','Dibley'],
+ ['In Life on Mars, DI Sam Tyler wakes up in which year?','1973','1969','1981','1965'],
+ ['Who narrates Blue Planet II?','David Attenborough','Stephen Fry','Brian Cox','Chris Packham'],
+ ['Who plays DCI John Luther?','Idris Elba','David Harewood','Lennie James','Adrian Lester'],
+ ['Inspector Morse, played by John Thaw, is set in which city?','Oxford','Cambridge','Bath','York'],
+ ['Dad\'s Army is set in which fictional seaside town?','Walmington-on-Sea','Sandford','Royston Vasey','Dibley'],
+ ['Which 1969 Ken Loach film is about a Barnsley boy and his kestrel?','Kes','Cathy Come Home','Poor Cow','Looks and Smiles'],
+ ['Who directed Dunkirk (2017)?','Christopher Nolan','Sam Mendes','Danny Boyle','Joe Wright'],
+ ['In Peep Show, Mark and Jeremy share a flat in which part of London?','Croydon','Camden','Peckham','Islington'],
+ ['The IT Crowd is set in the basement of which company?','Reynholm Industries','Wernham Hogg','Globex','Initech'],
+ ['Who plays Tommy Shelby in Peaky Blinders?','Cillian Murphy','Paul Anderson','Tom Hardy','Joe Cole'],
+ ['Which sitcom features Edina Monsoon and Patsy Stone?','Absolutely Fabulous','Birds of a Feather','Dinnerladies','Miranda'],
+ ['Who created Black Mirror?','Charlie Brooker','Russell T Davies','Armando Iannucci','Chris Morris'],
+ ['Billy Elliot is set against the backdrop of which event?','The 1984–85 miners\' strike','The Winter of Discontent','The 1981 royal wedding','The 1990 poll tax riots'],
+ ['What is the Doctor\'s home planet in Doctor Who?','Gallifrey','Skaro','Mondas','Trenzalore'],
+ ['Which 1973 folk horror film stars Edward Woodward as Sergeant Howie?','The Wicker Man','Witchfinder General','Don\'t Look Now','The Devil Rides Out'],
+ ['The 1964 film Zulu depicts which battle?','Rorke\'s Drift','Isandlwana','Blood River','Ulundi'],
+ ['Who co-wrote Blackadder series 2–4 with Richard Curtis?','Ben Elton','Rowan Atkinson','Stephen Fry','John Lloyd'],
+ ['Broadchurch is set on which English county\'s coast?','Dorset','Cornwall','Devon','Norfolk'],
+ ['Who played the title role in Lawrence of Arabia (1962)?','Peter O\'Toole','Alec Guinness','Omar Sharif','Richard Burton'],
+ ['In The Thick of It, Malcolm Tucker is played by?','Peter Capaldi','Chris Addison','Rebecca Front','Roger Allam'],
+ ['Which motoring show featured a masked driver called The Stig?','Top Gear','Fifth Gear','Wheeler Dealers','Driven'],
+ ['What is the pub in Coronation Street called?','The Rovers Return','The Queen Vic','The Woolpack','The Dog in the Pond'],
+ ['Who plays the assassin Villanelle in Killing Eve?','Jodie Comer','Sandra Oh','Fiona Shaw','Suranne Jones'],
+ ['Spaced starred Simon Pegg alongside which actress?','Jessica Hynes','Olivia Colman','Katherine Parkinson','Tamsin Greig'],
+ ['Who directed Get Carter (1971), starring Michael Caine?','Mike Hodges','Ken Russell','Nicolas Roeg','Guy Hamilton'],
+ ['In 28 Days Later, where does Cillian Murphy\'s character wake up?','A deserted London hospital','A Manchester tower block','A Tube train','A Brighton hotel'],
+ ['Which 2017 sequel sends a marmalade-loving bear to prison?','Paddington 2','Christopher Robin','Nanny McPhee Returns','Peter Rabbit 2'],
+ ['Derry Girls is set during which period?','The Troubles in the 1990s','The 1970s oil crisis','The Celtic Tiger 2000s','The 1950s'],
+ ['Who played Jim Hacker in Yes Minister?','Paul Eddington','Nigel Hawthorne','Derek Fowlds','Richard Briers'],
+ ['Which 2008 Danny Boyle film won eight Oscars?','Slumdog Millionaire','127 Hours','Sunshine','Millions'],
+ ['Who composed the famous theme to Chariots of Fire?','Vangelis','John Barry','Hans Zimmer','Jean-Michel Jarre'],
+ ['Who played Queen Elizabeth II in series 1 and 2 of The Crown?','Claire Foy','Olivia Colman','Imelda Staunton','Helena Bonham Carter'],
+ ['Who plays Geraldine Granger, the Vicar of Dibley?','Dawn French','Jennifer Saunders','Victoria Wood','Julie Walters'],
+ ['Who plays Alison in the BBC sitcom Ghosts?','Charlotte Ritchie','Kiell Smith-Bynoe','Lolly Adefope','Martha Howe-Douglas'],
+ ['What make of three-wheeled van do the Trotters drive?','Reliant Regal','Reliant Robin','Bond Bug','Morris Minor'],
+ ['Who played Baldrick in Blackadder?','Tony Robinson','Tim McInnerny','Hugh Laurie','Rik Mayall'],
+ ['Which Monty Python film features the Knights Who Say "Ni"?','Monty Python and the Holy Grail','Life of Brian','The Meaning of Life','And Now for Something Completely Different'],
+ ['Love Actually was written and directed by?','Richard Curtis','Mike Newell','Roger Michell','Working Title'],
+ ['Which 1998 Guy Ritchie film marked Vinnie Jones\'s acting debut?','Lock, Stock and Two Smoking Barrels','Snatch','RocknRolla','Mean Machine'],
+ ['Who plays DCI Vera Stanhope?','Brenda Blethyn','Julie Walters','Imelda Staunton','Lesley Manville'],
+ ['The teen drama Skins is set in which city?','Bristol','Bath','Cardiff','Brighton'],
+ ['Who plays Jess in Bend It Like Beckham?','Parminder Nagra','Keira Knightley','Archie Panjabi','Meera Syal'],
+ ['What is the name of the Spanish waiter in Fawlty Towers?','Manuel','Pedro','Carlos','Miguel'],
+ ['Which comedy sees Rob Brydon and Steve Coogan eating their way around Britain?','The Trip','Gavin & Stacey','Marion and Geoff','Saxondale'],
+ ['Who directed This Is England (2006)?','Shane Meadows','Ken Loach','Mike Leigh','Andrea Arnold'],
+ ['Who is the villainous penguin in Wallace & Gromit: The Wrong Trousers?','Feathers McGraw','Preston','Victor Quartermaine','Piella Bakewell'],
+ ['Who composed the original Doctor Who theme in 1963?','Ron Grainer','Delia Derbyshire','Murray Gold','John Barry'],
+ ['The TV detective series Shetland is based on books by which author?','Ann Cleeves','Val McDermid','Ian Rankin','Peter May'],
+ ['Who directed Brief Encounter (1945)?','David Lean','Michael Powell','Carol Reed','Alfred Hitchcock'],
+ ['Who played Hyacinth Bucket in Keeping Up Appearances?','Patricia Routledge','Penelope Keith','Judi Dench','Prunella Scales'],
+ ['"Suits you, sir!" was a catchphrase from which sketch show?','The Fast Show','Little Britain','Harry Enfield & Chums','Smack the Pony'],
+ ['Who plays Alan Partridge?','Steve Coogan','Rob Brydon','Armando Iannucci','Patrick Marber'],
+ ['In Sexy Beast (2000), Ben Kingsley plays which terrifying gangster?','Don Logan','Gal Dove','Teddy Bass','Harry Flowers'],
+ ['Attack the Block (2011) was the film debut of which actor?','John Boyega','Daniel Kaluuya','Letitia Wright','Will Poulter'],
+ ['The 2014 film Pride is about LGBT activists supporting whom?','Striking Welsh miners','Liverpool dockers','Grunwick strikers','Greenham Common campers'],
+ ['Gregory\'s Girl (1981) is set in which Scottish new town?','Cumbernauld','East Kilbride','Livingston','Glenrothes'],
+ ['Catastrophe stars Sharon Horgan alongside which American comedian?','Rob Delaney','Rob Riggle','Marc Maron','Paul F. Tompkins'],
+ ['Who is Ian Hislop\'s long-serving fellow team captain on Have I Got News for You?','Paul Merton','Angus Deayton','Frank Skinner','Jack Dee'],
+ ['The Royle Family is set in which city?','Manchester','Liverpool','Leeds','Newcastle'],
+ ['Who plays DS Steve Arnott in Line of Duty?','Martin Compston','Adrian Dunbar','Craig Parkinson','Daniel Mays'],
+ ['In which year did Doctor Who first air?','1963','1959','1966','1970'],
+ ['Which 1962 film launched the James Bond series?','Dr. No','From Russia with Love','Goldfinger','Thunderball'],
+ ['What was Daniel Craig\'s final Bond film?','No Time to Die','Spectre','Skyfall','Quantum of Solace'],
+ ['What is the pub in Shaun of the Dead called?','The Winchester','The Crown','The Swan','The Nag\'s Head'],
+ ['Which Channel 4 comedy stars Richard Ayoade as Maurice Moss?','The IT Crowd','Garth Marenghi\'s Darkplace','Peep Show','Toast of London'],
+ ['Who plays Richard Sharpe in Sharpe?','Sean Bean','Daragh O\'Malley','Pete Postlethwaite','Ray Winstone'],
+];
+const CHAIN = [20, 50, 100, 200, 500];
+const TARGET = 1000;
+const cum = n => CHAIN.slice(0, n).reduce((a, b) => a + b, 0);
+const fmt = n => '£' + n.toLocaleString('en-GB');
+
+function newState(players, seed) { return { p: players, seed, used: [], sc: [0, 0], n: 0 }; }
+
+function drawQuestions(state) {
+  const rand = FCC.rng((state.seed ^ (state.t * 7919)) >>> 0);
+  const pool = Q.map((_, i) => i).filter(i => !state.used.includes(i));
+  return FCC.shuffle(pool, rand).slice(0, CHAIN.length).map(qi => {
+    const q = Q[qi]; const opts = FCC.shuffle([0, 1, 2, 3], rand);
+    return { qi, text: q[0], opts: opts.map(o => q[1 + o]), correct: opts.indexOf(0) };
+  });
+}
+
+function scoresEl(state) {
+  return FCC.h('div', { class: 'panel' }, FCC.h('div', { class: 'scores' }, [0, 1].map(i => FCC.h('div', { class: 'sc' }, FCC.badge(state, i), FCC.h('div', { class: 'amt' }, fmt(state.sc[i])),
+    FCC.h('div', { class: 'bar', style: { width: '160px' } }, FCC.h('i', { style: { width: Math.min(100, state.sc[i] / TARGET * 100) + '%' } }))))),
+    FCC.h('p', { class: 'center small muted', style: { margin: '10px 0 0' } }, `First to ${fmt(TARGET)} wins · ${Q.length - state.used.length} questions left in the bank`));
+}
+function chainEl(idx) {
+  return FCC.h('div', { class: 'chain' }, CHAIN.map((v, i) => FCC.h('div', { class: 'link' + (i < idx ? ' done' : i === idx ? ' cur' : '') }, fmt(v))));
+}
+
+function renderTurn(state, api, root) {
+  const me = state.n, you = 1 - me;
+  root.append(FCC.replayPanel(state));
+  root.append(scoresEl(state));
+  const qs = drawQuestions(state);
+  let idx = 0, correct = 0, seen = 0;
+  const panel = FCC.h('div', { class: 'panel accent' });
+  const endTurn = (banked, note) => {
+    state.sc[me] += banked;
+    state.n = you;
+    const used = qs.slice(0, seen).map(q => q.qi);
+    state.used.push(...used.filter(u => !state.used.includes(u)));
+    const summary = `${state.p[me]} ${note} ${banked ? `and banked ${fmt(banked)}` : ''} (total ${fmt(state.sc[me])}).`.replace(/\s+/g, ' ');
+    // game ends after player 1's turn if someone has hit the target or the bank is nearly empty
+    if (me === 1) {
+      const [a, b] = state.sc;
+      const bankDry = Q.length - state.used.length < CHAIN.length;
+      if (a >= TARGET || b >= TARGET || bankDry) state.over = { winner: a === b ? null : (a > b ? 0 : 1), reason: `${fmt(a)} to ${fmt(b)}${bankDry ? ' — the question bank ran dry' : ''}.` };
+    } else if (state.sc[0] >= TARGET) { /* player 1 gets a last turn */ }
+    api.commit({ by: me, text: summary + (me === 0 && state.sc[0] >= TARGET ? ` ${state.p[1]} gets one last turn to catch up!` : '') });
+  };
+  const ask = () => {
+    panel.innerHTML = '';
+    const q = qs[idx]; seen = idx + 1;
+    panel.append(FCC.h('h2', {}, `Question ${idx + 1} of ${CHAIN.length} — worth ${fmt(CHAIN[idx])}`), chainEl(idx),
+      FCC.h('div', { class: 'pot' }, correct ? `In the chain: ${fmt(cum(correct))}` : 'Nothing in the chain yet'),
+      FCC.h('div', { class: 'q' }, q.text));
+    const grid = FCC.h('div', { class: 'opts' });
+    const btns = q.opts.map((o, i) => FCC.h('button', { class: 'opt', onClick: () => answer(i) }, FCC.h('span', { class: 'l' }, 'ABCD'[i]), o));
+    btns.forEach(b => grid.append(b));
+    panel.append(grid);
+    const answer = i => {
+      btns.forEach(b => b.setAttribute('disabled', ''));
+      if (i === q.correct) {
+        btns[i].classList.add('right'); FCC.sfx.good(); correct++;
+        setTimeout(() => decide(), 700);
+      } else {
+        btns[i].classList.add('wrong'); btns[q.correct].classList.add('right'); FCC.sfx.bad(); panel.classList.add('shake');
+        setTimeout(() => endTurn(0, `got "${q.text}" wrong after ${correct} correct — chain of ${fmt(cum(correct))} lost!`), 1600);
+      }
+    };
+  };
+  const decide = () => {
+    const have = cum(correct);
+    if (correct >= CHAIN.length) { FCC.sfx.win(); endTurn(have, `answered all ${CHAIN.length} correctly`); return; }
+    idx++;
+    panel.innerHTML = '';
+    panel.append(FCC.h('h2', {}, `✓ Correct! You've got ${fmt(have)} in the chain`), chainEl(idx),
+      FCC.h('p', { class: 'center' }, `Bank it now, or carry on for another ${fmt(CHAIN[idx])}? Get it wrong and you lose the lot.`),
+      FCC.h('div', { class: 'row', style: { justifyContent: 'center' } },
+        FCC.h('button', { class: 'btn green', onClick: () => { FCC.sfx.good(); endTurn(have, `answered ${correct} correctly`); } }, `💰 BANK ${fmt(have)}`),
+        FCC.h('button', { class: 'btn primary', onClick: () => { FCC.sfx.click(); ask(); } }, `🎲 CARRY ON for ${fmt(CHAIN[idx])}`)));
+  };
+  ask();
+  root.append(panel);
+}
+function renderBoard(state) { return scoresEl(state); }
+
+FCC.app({
+  id: 'bankit', title: 'Bank It!', emoji: '💷',
+  blurb: 'Push-your-luck pub quiz. Answer British film & TV questions to build a chain of cash, bank it before you blow it. First to £1,000.',
+  howTo: `<ul>
+    <li>On your turn you face up to five questions worth £20, £50, £100, £200 and £500 — a chain of £870 if you get them all.</li>
+    <li>After each correct answer choose: <b>Bank</b> the chain (your turn ends) or <b>Carry on</b> for the next question.</li>
+    <li>One wrong answer and the whole chain is lost. Your turn ends and the money is gone.</li>
+    <li>First to £1,000 wins. The player who went second always gets an equal number of turns.</li>
+    <li>Questions never repeat within a game. No Googling — this is a club of honour.</li>
+  </ul>`,
+  newState, renderTurn, renderBoard
+});
+</script>
+</body>
+</html>

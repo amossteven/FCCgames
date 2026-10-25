@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Telly Trumps · FCC Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/fcc.css?v=2">
+<style>
+.table{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:560px){.table{grid-template-columns:1fr}}
+.card{background:#fff;border:2px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);min-height:300px;position:relative}
+.card.back{background:#1B1B1B;background-image:repeating-linear-gradient(135deg,transparent 0 14px,rgba(232,99,43,.18) 14px 28px);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#EFEBE4;border:3px solid var(--orange)}
+.card.back .logo{font-family:var(--font-head);font-size:24px;color:var(--orange);text-align:center;line-height:1.1;text-transform:uppercase}
+.card .type{font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#1B1B1B;background:var(--orange);display:inline-block;padding:4px 10px;border-radius:999px}
+.card .name{font-family:var(--font-head);font-size:17px;line-height:1.15;text-transform:uppercase;margin:12px 0 4px;min-height:40px}
+.card .tag{color:var(--muted);font-size:14px;min-height:44px;line-height:1.4}
+.stat{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;margin:6px 0;border-radius:10px;background:var(--bg);border:2px solid transparent;font-size:15px;font-weight:600}
+.stat.pick{cursor:pointer}
+.stat.pick:hover{border-color:var(--orange);background:#FBE3D6}
+.stat .v{font-family:var(--font-head);font-size:16px;color:var(--orange-dark)}
+.stat.win{border-color:var(--green);background:#DDF2E7}
+.stat.lose{border-color:var(--red);background:#F8DCD8}
+.stat.chosen{border-color:var(--line)}
+.hands{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.hand{font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.hand b{font-family:var(--font-head);color:var(--orange-dark);font-size:22px}
+.result{font-family:var(--font-head);text-transform:uppercase;font-size:15px;text-align:center;padding:14px;margin:12px 0 0;border-radius:12px;background:#1B1B1B;color:#fff}
+.result.w{color:#fff} .result.l{color:var(--red)} .result.d{color:var(--yellow)}
+.pot{color:var(--orange-dark)}
+</style>
+</head>
+<body>
+<div id="fcc-header"></div>
+<main id="app" class="wrap"></main>
+<script src="../shared/fcc.js?v=3"></script>
+<script>
+/* Card data. Year is real; the other stats are FCC club ratings out of 100 (deliberately arguable — argue away!). */
+const STATS = [
+  { k: 'year', label: 'Vintage (oldest wins)', low: true },
+  { k: 'cult', label: 'Cult Status' },
+  { k: 'laughs', label: 'Laughs' },
+  { k: 'tears', label: 'Tears' },
+  { k: 'brit', label: 'Britishness' },
+  { k: 'quote', label: 'Quotability' },
+];
+const CARDS = [
+  // name, type, year, cult, laughs, tears, brit, quote, tagline
+  ['Trainspotting','Film',1996,96,62,70,88,97,'Choose life. Choose Edinburgh. Choose the worst toilet in Scotland.'],
+  ['The Full Monty','Film',1997,80,90,66,97,78,'Sheffield steelworkers, one dole queue, and a very brave finale.'],
+  ['Four Weddings and a Funeral','Film',1994,74,84,72,92,86,'Hugh Grant stammers his way through the social calendar from hell.'],
+  ['Love Actually','Film',2003,70,80,78,90,84,'Every British actor you know, one Christmas, far too many plotlines.'],
+  ['Shaun of the Dead','Film',2004,95,94,55,93,95,'A rom-zom-com. Go to the Winchester, have a pint, wait for it to blow over.'],
+  ['Hot Fuzz','Film',2007,92,96,40,96,93,'Sandford: lowest crime rate, highest accident rate. For the greater good.'],
+  ['Skyfall','Film',2012,72,42,60,85,74,'Bond goes home to a Scottish bothy and things do not go quietly.'],
+  ['Monty Python and the Holy Grail','Film',1975,99,98,10,90,99,'Coconuts, killer rabbits and a very reasonable budget.'],
+  ['Withnail and I','Film',1987,98,88,58,94,98,'Two out-of-work actors go on holiday by mistake.'],
+  ['The Italian Job','Film',1969,90,70,30,99,96,'Minis, Michael Caine, and a cliffhanger in the most literal sense.'],
+  ['Lock, Stock and Two Smoking Barrels','Film',1998,88,82,25,92,88,'Antique shotguns, card sharks and a lot of East End shouting.'],
+  ['Billy Elliot','Film',2000,70,55,92,95,60,'A County Durham lad dances through the miners\' strike.'],
+  ["The King's Speech",'Film',2010,55,50,80,98,62,'A stammering king, an Australian speech therapist, a nation listening.'],
+  ['Lawrence of Arabia','Film',1962,85,15,65,80,70,'Four hours of desert, camels and Peter O\'Toole\'s blue eyes.'],
+  ['Zulu','Film',1964,82,18,62,90,75,'Rorke\'s Drift, 1879. Men of Harlech, sung at full volume.'],
+  ['Paddington 2','Film',2017,78,88,85,96,72,'A marmalade-loving bear goes to prison and makes it nicer.'],
+  ['Wallace & Gromit: The Curse of the Were-Rabbit','Film',2005,86,90,30,99,80,'Cracking vegetables, Gromit. Cheese optional.'],
+  ['Kes','Film',1969,88,35,95,97,55,'A Barnsley boy and his kestrel. Bring tissues.'],
+  ['The Wicker Man','Film',1973,97,20,40,85,82,'Sergeant Howie visits Summerisle. It does not go well.'],
+  ['Doctor Who','TV',1963,99,60,80,97,92,'A Time Lord, a blue box and sixty years of hiding behind the sofa.'],
+  ['Fawlty Towers','TV',1975,96,99,15,99,99,'Twelve episodes. Zero relaxing holidays in Torquay.'],
+  ['Only Fools and Horses','TV',1981,95,97,75,100,99,'This time next year, Rodney, we\'ll be millionaires.'],
+  ['Blackadder','TV',1983,97,97,70,98,98,'Four centuries of cunning plans, one Baldrick.'],
+  ['The Office','TV',2001,94,93,55,95,96,'Slough\'s finest paper merchants and the world\'s worst boss.'],
+  ['Sherlock','TV',2010,85,65,60,90,80,'Baker Street in the age of texting. The game is on.'],
+  ['Peaky Blinders','TV',2013,88,30,55,92,78,'Birmingham, razor blades and a lot of slow-motion walking.'],
+  ['Downton Abbey','TV',2010,60,45,70,99,55,'Upstairs, downstairs and a great deal of silverware.'],
+  ['Line of Duty','TV',2012,82,25,50,93,85,'AC-12 investigate bent coppers. Mother of God.'],
+  ['Gavin & Stacey','TV',2007,84,92,68,96,90,'Essex meets Barry Island. What\'s occurring?'],
+  ['Father Ted','TV',1995,98,99,30,70,99,'Craggy Island\'s priests. Down with this sort of thing.'],
+  ['Red Dwarf','TV',1988,96,92,20,88,93,'Three million years out, one very smug hologram.'],
+  ['The Thick of It','TV',2005,92,95,20,97,97,'Westminster spin doctoring at terrifying volume.'],
+  ['Fleabag','TV',2016,90,88,86,90,84,'Breaking the fourth wall and most of her relationships.'],
+  ['The Inbetweeners','TV',2008,86,95,25,96,94,'Rudge Park Comprehensive\'s finest. Bus wankers!'],
+  ["Dad's Army",'TV',1968,93,90,40,100,95,'Walmington-on-Sea\'s Home Guard. Don\'t panic!'],
+  ['Taskmaster','TV',2015,80,96,10,93,70,'Grown adults doing nonsense for a man on a throne.'],
+].map(c => ({ name: c[0], type: c[1], year: c[2], cult: c[3], laughs: c[4], tears: c[5], brit: c[6], quote: c[7], tag: c[8] }));
+
+const HAND_SIZE = 12, MAX_TURNS = 40;
+
+function newState(players, seed) {
+  const order = FCC.shuffle(CARDS.map((_, i) => i), FCC.rng(seed));
+  return { p: players, seed, hands: [order.slice(0, HAND_SIZE), order.slice(HAND_SIZE, HAND_SIZE * 2)], pot: [], n: 0 };
+}
+
+function cardEl(idx, opts = {}) {
+  const c = CARDS[idx];
+  const el = FCC.h('div', { class: 'card pop' },
+    FCC.h('span', { class: 'type' }, c.type === 'TV' ? '📺 TV' : '🎬 FILM'),
+    FCC.h('div', { class: 'name' }, c.name),
+    FCC.h('div', { class: 'tag' }, c.tag));
+  for (const s of STATS) {
+    let cls = 'stat';
+    if (opts.pick) cls += ' pick';
+    if (opts.chosen === s.k) cls += opts.outcome ? ' ' + opts.outcome : ' chosen';
+    const row = FCC.h('div', { class: cls, onClick: opts.pick ? () => opts.pick(s) : null },
+      FCC.h('span', {}, s.label), FCC.h('span', { class: 'v' }, c[s.k]));
+    el.append(row);
+  }
+  return el;
+}
+function backEl(label) {
+  return FCC.h('div', { class: 'card back' }, FCC.h('div', { class: 'logo' }, 'TELLY', FCC.h('br'), 'TRUMPS'), FCC.h('div', { class: 'small', style: { marginTop: '10px' } }, label));
+}
+function handsEl(state) {
+  return FCC.h('div', { class: 'panel' }, FCC.h('div', { class: 'hands' },
+    FCC.h('div', { class: 'hand' }, FCC.badge(state, 0), ' ', FCC.h('b', {}, state.hands[0].length), ' cards'),
+    state.pot.length ? FCC.h('div', { class: 'hand pot' }, `POT: ${state.pot.length}`) : null,
+    FCC.h('div', { class: 'hand' }, FCC.badge(state, 1), ' ', FCC.h('b', {}, state.hands[1].length), ' cards')));
+}
+
+function compare(stat, a, b) {
+  const va = CARDS[a][stat.k], vb = CARDS[b][stat.k];
+  if (va === vb) return -1;
+  const aWins = stat.low ? va < vb : va > vb;
+  return aWins ? 0 : 1;
+}
+
+function renderLast(state) {
+  const L = state.last;
+  if (!L || L.cards == null) return FCC.replayPanel(state);
+  const stat = STATS.find(s => s.k === L.stat);
+  const outcome = i => L.winner === -1 ? 'd' : (L.winner === i ? 'win' : 'lose');
+  const wrap = FCC.h('div', { class: 'panel' },
+    FCC.h('h3', {}, `LAST ROUND · ${state.p[L.by]} picked "${stat.label}"`),
+    FCC.h('div', { class: 'table' },
+      FCC.h('div', {}, FCC.badge(state, 0), cardEl(L.cards[0], { chosen: L.stat, outcome: outcome(0) === 'd' ? 'chosen' : outcome(0) })),
+      FCC.h('div', {}, FCC.badge(state, 1), cardEl(L.cards[1], { chosen: L.stat, outcome: outcome(1) === 'd' ? 'chosen' : outcome(1) }))),
+    FCC.h('div', { class: 'result ' + (L.winner === -1 ? 'd' : 'w') }, L.text));
+  return wrap;
+}
+
+function renderTurn(state, api, root) {
+  const me = state.n, you = 1 - me;
+  root.append(renderLast(state));
+  root.append(handsEl(state));
+  const myTop = state.hands[me][0], theirTop = state.hands[you][0];
+  const info = FCC.h('p', { class: 'center' }, `${state.p[me]}, pick the stat you think beats ${state.p[you]}'s hidden card.`);
+  const table = FCC.h('div', { class: 'table' });
+  const mine = FCC.h('div', {}, FCC.badge(state, me), ' your top card', cardEl(myTop, { pick: stat => play(stat) }));
+  const theirs = FCC.h('div', {}, FCC.badge(state, you), ' their top card', backEl('Face down'));
+  if (me === 0) table.append(mine, theirs); else table.append(theirs, mine);
+  root.append(FCC.h('div', { class: 'panel accent' }, FCC.h('h2', {}, 'Your turn'), info, table));
+
+  function play(stat) {
+    FCC.sfx.click();
+    const w = compare(stat, myTop, theirTop); // 0 => player 0 wins, 1 => player 1 wins, -1 draw
+    state.hands[0].shift(); state.hands[1].shift();
+    const va = CARDS[myTop][stat.k], vb = CARDS[theirTop][stat.k];
+    let text, cards = me === 0 ? [myTop, theirTop] : [theirTop, myTop];
+    if (w === -1) {
+      state.pot.push(myTop, theirTop);
+      text = `${CARDS[myTop].name} vs ${CARDS[theirTop].name} on ${stat.label}: ${va} v ${vb} — a DRAW! ${state.pot.length} cards in the pot.`;
+    } else {
+      const winner = w; // index of winning player
+      const loserCard = winner === me ? theirTop : myTop, winnerCard = winner === me ? myTop : theirTop;
+      state.hands[winner].push(winnerCard, loserCard, ...state.pot);
+      state.pot = [];
+      text = `${CARDS[myTop].name} (${va}) vs ${CARDS[theirTop].name} (${CARDS[theirTop][stat.k]}) on ${stat.label} — ${state.p[winner]} takes the round!`;
+      state.n = winner;
+    }
+    // end conditions
+    if (state.hands[0].length === 0 || state.hands[1].length === 0) {
+      const winner = state.hands[0].length === 0 ? 1 : 0;
+      state.over = { winner, reason: `${state.p[1 - winner]} has run out of cards.` };
+    } else if (state.t + 1 >= MAX_TURNS) {
+      const a = state.hands[0].length, b = state.hands[1].length;
+      state.over = { winner: a === b ? null : (a > b ? 0 : 1), reason: `Time's up after ${MAX_TURNS} rounds — ${a} cards to ${b}.` };
+    } else if (state.hands[0].length + state.hands[1].length + state.pot.length <= 1) {
+      state.over = { winner: null, reason: 'Nothing left to play for!' };
+    }
+    api.commit({ by: me, text, stat: stat.k, cards, winner: w });
+  }
+}
+
+function renderBoard(state) {
+  const wrap = FCC.h('div', {});
+  wrap.append(renderLast(state));
+  wrap.append(handsEl(state));
+  return wrap;
+}
+
+FCC.app({
+  id: 'trumps', title: 'Telly Trumps', emoji: '🃏',
+  blurb: 'Top Trumps with 36 British film & TV classics. Pick a stat, beat their hidden card, take the cards. Run them dry to win.',
+  howTo: `<ul>
+    <li>Each player is dealt 12 cards from a shuffled deck of 36 British films and TV shows.</li>
+    <li>On your turn you see your top card. Pick one of six stats: <b>Vintage</b> (oldest wins), <b>Cult Status</b>, <b>Laughs</b>, <b>Tears</b>, <b>Britishness</b> or <b>Quotability</b>.</li>
+    <li>Your opponent's top card is revealed and the higher value wins both cards (placed at the bottom of the winner's hand). Winner picks next.</li>
+    <li>Draws go into a pot — the next round's winner takes the lot.</li>
+    <li>Win by taking all your opponent's cards, or have the most cards after 40 rounds.</li>
+    <li>Ratings are FCC club ratings, not science. Disputes to be settled at the bar.</li>
+  </ul>`,
+  newState, renderTurn, renderBoard
+});
+</script>
+</body>
+</html>

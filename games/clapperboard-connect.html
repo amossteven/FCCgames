@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clapperboard Connect · FCC Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/fcc.css?v=2">
+<style>
+.boardwrap{background:#1B1B1B;border:6px solid var(--orange);border-radius:18px;padding:12px;box-shadow:var(--shadow);max-width:520px;margin:0 auto}
+.cols{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px}
+.colbtn{font-weight:800;font-size:16px;background:#EFEBE4;color:#1B1B1B;border:2px solid #EFEBE4;border-radius:999px;padding:6px 0;cursor:pointer;line-height:1.2}
+.colbtn:hover{background:var(--orange);border-color:var(--orange)}
+.colbtn.pop{background:#1B1B1B;color:var(--orange);border-color:var(--orange)}
+.colbtn.pop:hover{background:var(--orange);color:#1B1B1B}
+.colbtn[disabled]{opacity:.25;cursor:not-allowed}
+.board{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.hole{aspect-ratio:1;border-radius:50%;background:#2E2E2E;border:3px solid #3A3A3A;position:relative;overflow:hidden}
+.disc{position:absolute;inset:3px;border-radius:50%}
+.disc.p1{background:radial-gradient(circle,#1B1B1B 0 14%,var(--orange) 15% 30%,#F08A5D 31% 100%);box-shadow:inset 0 0 0 3px var(--orange-dark)}
+.disc.p1::after{content:"";position:absolute;inset:22%;border-radius:50%;border:3px dashed #1B1B1B}
+.disc.p2{background:repeating-linear-gradient(90deg,#D64533 0 18%,#fff 18% 36%);box-shadow:inset 0 0 0 3px #8A1010}
+.disc.p2::after{content:"🍿";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px}
+.disc.new{animation:dropin .45s cubic-bezier(.3,1.3,.5,1)}
+@keyframes dropin{from{transform:translateY(-500%)}to{transform:translateY(0)}}
+.disc.winline{box-shadow:0 0 0 4px var(--yellow),0 0 18px var(--yellow)}
+.hole.last{box-shadow:0 0 0 3px var(--yellow)}
+.legend{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;color:#EFEBE4}
+.legend .tok{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.legend .mini{width:22px;height:22px;border-radius:50%;display:inline-block;position:relative}
+.legend .mini::after{display:none}
+.cut{font-weight:700;font-size:12px;color:#A8A39B}
+.cut b{color:var(--orange)}
+</style>
+</head>
+<body>
+<div id="fcc-header"></div>
+<main id="app" class="wrap"></main>
+<script src="../shared/fcc.js?v=3"></script>
+<script>
+const W = 7, H = 6;
+function newState(players, seed) { return { p: players, seed, b: '0'.repeat(W * H), cut: [1, 1], n: 0 }; }
+const at = (b, c, r) => +b[r * W + c];
+const set = (b, c, r, v) => b.slice(0, r * W + c) + v + b.slice(r * W + c + 1);
+
+function winLine(b, who) {
+  const dirs = [[1, 0], [0, 1], [1, 1], [1, -1]];
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+    if (at(b, c, r) !== who) continue;
+    for (const [dx, dy] of dirs) {
+      const cells = [[c, r]];
+      for (let k = 1; k < 4; k++) { const cc = c + dx * k, rr = r + dy * k; if (cc < 0 || cc >= W || rr < 0 || rr >= H || at(b, cc, rr) !== who) break; cells.push([cc, rr]); }
+      if (cells.length === 4) return cells.map(([x, y]) => y * W + x);
+    }
+  }
+  return null;
+}
+function dropRow(b, c) { for (let r = H - 1; r >= 0; r--) if (at(b, c, r) === 0) return r; return -1; }
+function popColumn(b, c) { // remove bottom disc, shift column down
+  let col = []; for (let r = 0; r < H; r++) col.push(at(b, c, r));
+  col.pop(); col.unshift(0);
+  for (let r = 0; r < H; r++) b = set(b, c, r, col[r]);
+  return b;
+}
+
+function boardEl(state, opts = {}) {
+  const b = state.b, wl = (state.over && state.over.line) || [];
+  const last = state.last && state.last.cell != null ? state.last.cell : -1;
+  const cols = FCC.h('div', { class: 'cols' });
+  for (let c = 0; c < W; c++) {
+    const full = dropRow(b, c) === -1;
+    const popOK = opts.popMode && at(b, c, H - 1) === opts.me + 1;
+    const disabled = !opts.onCol || (opts.popMode ? !popOK : full);
+    cols.append(FCC.h('button', { class: 'colbtn' + (opts.popMode ? ' pop' : ''), disabled, onClick: () => opts.onCol(c) }, opts.popMode ? '▲' : '▼'));
+  }
+  const grid = FCC.h('div', { class: 'board' });
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+    const v = at(b, c, r), i = r * W + c;
+    const hole = FCC.h('div', { class: 'hole' + (i === last && !opts.popMode ? ' last' : '') });
+    if (v) hole.append(FCC.h('div', { class: `disc p${v}${i === last && opts.animate ? ' new' : ''}${wl.includes(i) ? ' winline' : ''}` }));
+    grid.append(hole);
+  }
+  return FCC.h('div', { class: 'boardwrap' }, opts.onCol ? cols : null, grid,
+    FCC.h('div', { class: 'legend' },
+      FCC.h('span', { class: 'tok' }, FCC.h('span', { class: 'mini disc p1', style: { position: 'relative' } }), state.p[0]),
+      FCC.h('span', { class: 'cut' }, `Director's Cut: ${state.p[0]} `, FCC.h('b', {}, state.cut[0] ? '●' : '○'), ` · ${state.p[1]} `, FCC.h('b', {}, state.cut[1] ? '●' : '○')),
+      FCC.h('span', { class: 'tok' }, state.p[1], FCC.h('span', { class: 'mini disc p2', style: { position: 'relative' } }))));
+}
+
+function renderTurn(state, api, root) {
+  const me = state.n, you = 1 - me;
+  let popMode = false;
+  root.append(FCC.replayPanel(state));
+  const panel = FCC.h('div', { class: 'panel accent' });
+  const draw = () => {
+    panel.innerHTML = '';
+    panel.append(FCC.h('h2', {}, popMode ? "🎬 Director's Cut — pick a column to pull your bottom disc" : `Your move, ${state.p[me]} — drop a ${me === 0 ? 'reel' : 'popcorn'}`),
+      boardEl(state, { me, popMode, animate: !popMode, onCol: c => popMode ? pop(c) : drop(c) }),
+      FCC.h('div', { class: 'row', style: { marginTop: '12px', justifyContent: 'center' } },
+        state.cut[me] ? FCC.h('button', { class: 'btn ' + (popMode ? 'ghost' : 'primary') + ' sm', onClick: () => { FCC.sfx.click(); popMode = !popMode; draw(); } }, popMode ? '✖ CANCEL CUT' : "🎬 USE DIRECTOR'S CUT") : FCC.h('span', { class: 'muted small' }, "Director's Cut used")));
+  };
+  const finish = (text, cell) => api.commit({ by: me, text, cell });
+  const drop = c => {
+    const r = dropRow(state.b, c); if (r < 0) return;
+    FCC.sfx.drop();
+    state.b = set(state.b, c, r, me + 1);
+    const line = winLine(state.b, me + 1);
+    if (line) state.over = { winner: me, line, reason: 'Four in a row!' };
+    else if (!state.b.includes('0')) state.over = { winner: null, reason: 'Board full — a draw.' };
+    else state.n = you;
+    finish(`${state.p[me]} dropped into column ${c + 1}` + (line ? ' and connected FOUR!' : '.'), r * W + c);
+  };
+  const pop = c => {
+    if (at(state.b, c, H - 1) !== me + 1) return;
+    FCC.sfx.good();
+    state.cut[me] = 0;
+    state.b = popColumn(state.b, c);
+    const mineL = winLine(state.b, me + 1), theirsL = winLine(state.b, you + 1);
+    let text = `${state.p[me]} used their DIRECTOR'S CUT on column ${c + 1}`;
+    if (mineL && theirsL) { state.over = { winner: null, line: mineL, reason: 'Both players connected four at once!' }; text += ' — and BOTH players connected four. Draw!'; }
+    else if (mineL) { state.over = { winner: me, line: mineL, reason: 'Four in a row via a cheeky edit!' }; text += ' and connected FOUR!'; }
+    else if (theirsL) { state.over = { winner: you, line: theirsL, reason: 'The cut handed four in a row to the opponent.' }; text += ` — oops, it gave ${state.p[you]} four in a row!`; }
+    else { state.n = you; text += '. The column shifts down…'; }
+    finish(text, null);
+  };
+  draw(); root.append(panel);
+}
+function renderBoard(state) { return FCC.h('div', { class: 'panel' }, boardEl(state, {})); }
+
+FCC.app({
+  id: 'connect', title: 'Clapperboard Connect', emoji: '🎞️',
+  blurb: 'Connect Four at the pictures: film reels vs popcorn. Plus one Director\'s Cut each — pull your bottom disc and watch the column drop.',
+  howTo: `<ul>
+    <li>Take turns dropping a disc into one of seven columns. First to connect <b>four</b> in a row — across, down or diagonally — wins.</li>
+    <li>${'Each player has one <b>Director\'s Cut</b> per game: instead of dropping, pull your own bottom disc out of a column. Everything above it falls one row.'}</li>
+    <li>A cut can win you the game… or hand four in a row to your opponent. If it connects four for both of you, it's a draw.</li>
+    <li>Board full with no winner = draw.</li>
+  </ul>`,
+  newState, renderTurn, renderBoard
+});
+</script>
+</body>
+</html>
