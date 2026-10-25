@@ -52,6 +52,7 @@
    * &me=0|1             which seat the viewer holds; the other seat's turn shows a waiting screen
    * &new=1              start a fresh game (no state in the hash)
    * Messages to the parent: {v:1, type:'fcc:ready'|'fcc:height'|'fcc:move'|'fcc:rematch', …}
+   * Messages from the parent: {v:1, type:'fcc:load', state, me?} replaces the state in place (the other player moved)
    */
   const Q = new URLSearchParams(location.search);
   const EMBED = Q.get('embed') === '1';
@@ -272,7 +273,7 @@
       }
       if (EMBED) {
         if (justMoved) { root.append(sentPanel(state)); if (cfg.renderBoard) root.append(cfg.renderBoard(state)); return; }
-        if (ME !== null && state.n !== ME) { root.append(waitingPanel(state)); root.append(replayPanel(state)); if (cfg.renderBoard) root.append(cfg.renderBoard(state)); root.append(howTo(cfg)); return; }
+        if (FCC.me !== null && state.n !== FCC.me) { root.append(waitingPanel(state)); root.append(replayPanel(state)); if (cfg.renderBoard) root.append(cfg.renderBoard(state)); root.append(howTo(cfg)); return; }
       } else {
         const sent = localStorage.getItem('fcc-sent-' + state.id) === FCC.encode(state);
         if (justMoved || sent) {
@@ -288,6 +289,14 @@
     render(false);
     window.addEventListener('hashchange', () => { state = FCC.loadState(); render(false); });
     if (EMBED) {
+      window.addEventListener('message', e => {
+        if (PARENT_ORIGIN !== '*' && e.origin !== PARENT_ORIGIN) return;
+        const m = e.data;
+        if (!m || m.v !== 1 || m.type !== 'fcc:load' || !m.state || m.state.g !== cfg.id) return;
+        if (typeof m.me === 'number') FCC.me = m.me;
+        state = m.state; FCC.setHash(state); render(false);
+        if (!state.over && state.n === FCC.me) FCC.sfx.good();
+      });
       post({ type: 'fcc:ready', game: cfg.id, id: state ? state.id : null });
       const sendHeight = () => post({ type: 'fcc:height', height: document.documentElement.scrollHeight });
       if (window.ResizeObserver) new ResizeObserver(sendHeight).observe(document.body); else setInterval(sendHeight, 1000);

@@ -65,8 +65,13 @@ window.addEventListener('message', e => {
     // The site would: verify it is this member's turn, save m.state, post "<emoji> <title> — move <turn> · <text> /members/games/<id>".
     state = m.state;
     if (m.over) return;
-    seat = m.next;                 // the demo swaps seats so you can play the reply
-    setTimeout(openGame, 1200);
+    // The demo swaps seats so you can play the reply. On the site, the OTHER member's open card gets this
+    // same fcc:load (with their own seat) when the thread's poll sees the game has moved on: no reload.
+    seat = m.next;
+    setTimeout(() => {
+      frame.contentWindow.postMessage({ v: 1, type: 'fcc:load', state, me: seat }, GAMES_ORIGIN);
+      document.getElementById('seat').textContent = players[seat] + ' (seat ' + seat + ')';
+    }, 1200);
   }
   if (m.type === 'fcc:rematch') { state = null; seat = 0; openGame(); }
 });
