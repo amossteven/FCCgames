@@ -1,5 +1,7 @@
 # FCC Games 🎬📺
 
+**Live:** https://amossteven.github.io/FCCgames/ · **Repo:** https://github.com/amossteven/FCCgames
+
 Turn-by-turn games themed around UK film and television, built to be played **inside a chat or messaging area**. No server, no accounts, no database: each game is a single HTML page and the *entire game state lives in the link*.
 
 ## How a turn works
@@ -13,7 +15,7 @@ Example of what lands in the chat:
 
 ```
 🃏 Telly Trumps — turn 4 · Trainspotting (97) vs Zulu (75) on Quotability — Steve takes the round!
-👉 Jo, it's your turn: https://<your-host>/games/telly-trumps.html#eyJwIjpbIlN0ZXZlIi...
+👉 Jo, it's your turn: https://amossteven.github.io/FCCgames/games/telly-trumps.html#eyJwIjpbIlN0ZXZlIi...
 ```
 
 Because the state is in the URL fragment (`#…`) nothing is ever sent to a server, links never expire, and the games work from GitHub Pages, any static host, or even a shared folder.
