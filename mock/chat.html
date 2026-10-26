@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Members · Film Crew Collective (mock)</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Tokens copied from the FCC site's globals.css */
+:root{--orange:#e4712f;--orange-dark:#c85f21;--orange-bright:#f98b40;--ink:#14120f;--cream:#ede8e2;--cream-dark:#dfdbd8;--teal:#16a085}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--cream);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+svg{display:block}
+[hidden]{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---- the site behind the chat (just enough to feel like the members area) ---- */
+.site-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 28px;border-bottom:2px solid var(--ink);background:var(--cream)}
+.wordmark{display:flex;align-items:center;gap:10px;font-family:Archivo,sans-serif;font-weight:900;text-transform:uppercase;font-size:15px;line-height:1.05;letter-spacing:-.01em}
+.wordmark .mark{width:30px;height:30px;background:var(--orange);clip-path:polygon(0 50%,45% 0,45% 30%,100% 30%,100% 70%,45% 70%,45% 100%)}
+.site-links{display:flex;gap:26px;font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:9px 16px;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;border:2px solid var(--ink);background:#fff}
+.pill.dark{background:var(--ink);color:var(--cream)}
+.site-body{max-width:1000px;margin:0 auto;padding:40px 28px 160px}
+.site-body h1{font-family:Archivo,sans-serif;font-weight:900;text-transform:uppercase;font-size:40px;line-height:.95;letter-spacing:-.01em;margin:0 0 10px}
+.site-body h1 span{color:var(--orange)}
+.site-body p{color:rgba(20,18,15,.7);max-width:560px;font-size:16px}
+.note{margin-top:24px;display:inline-block;background:#fff;border:2px solid var(--ink);border-radius:16px;padding:14px 18px;box-shadow:5px 5px 0 0 var(--ink);font-size:14px}
+.note b{color:var(--orange-dark)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:36px;opacity:.55}
+.card{background:#fff;border:2px solid var(--ink);border-radius:16px;padding:18px;box-shadow:5px 5px 0 0 var(--ink)}
+.card h3{font-family:Archivo,sans-serif;font-weight:900;text-transform:uppercase;font-size:14px;margin:0 0 6px}
+.card p{font-size:13px;margin:0}
+
+/* ---- chat widget: ChatWidget.tsx ---- */
+.chat-root{position:fixed;right:24px;bottom:24px;z-index:40;display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+@media (max-width:640px){.chat-root{right:16px;bottom:16px}}
+.panel{display:flex;flex-direction:column;overflow:hidden;width:calc(100vw - 32px);max-width:384px;height:min(34rem,calc(100dvh - 9rem));border-radius:16px;border:2px solid var(--ink);background:#fff;box-shadow:5px 5px 0 0 var(--ink);animation:chatin .18s ease-out}
+@keyframes chatin{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.panel.hidden{display:none}
+.hdr{display:flex;align-items:center;gap:4px;border-bottom:2px solid var(--ink);padding:10px 8px;background:var(--ink);color:var(--cream)}
+.hdr h2{flex:1;min-width:0;margin:0;padding:0 8px;font-family:Archivo,sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{display:flex;width:32px;height:32px;flex-shrink:0;align-items:center;justify-content:center;border-radius:999px}
+.icon-btn:hover{background:rgba(237,232,226,.15)}
+
+/* thread: ChatThreadView.tsx */
+.thread{flex:1;overflow-y:auto;background:rgba(237,232,226,.5);padding:12px;overflow-anchor:none}
+.thread>*+*{margin-top:8px}
+.day{margin:8px 0;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(20,18,15,.4)}
+.row{display:flex}.row.mine{justify-content:flex-end}
+.bubble{max-width:82%;border-radius:16px;border:2px solid var(--ink);padding:8px 12px;font-size:14px;background:#fff}
+.bubble p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.mine .bubble{background:var(--ink);color:var(--cream)}
+.bubble .t{margin-top:2px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:rgba(20,18,15,.4)}
+.mine .bubble .t{color:rgba(237,232,226,.5)}
+.empty{padding:24px 0;text-align:center;font-size:14px;color:rgba(20,18,15,.5)}
+/* a game pin line: a thin centred note, not a bubble */
+.pinline{display:flex;justify-content:center}
+.pinline span{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:rgba(20,18,15,.06);padding:4px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:rgba(20,18,15,.6)}
+.pinline.turn span{background:rgba(228,113,47,.15);color:var(--orange-dark)}
+
+/* the pinned game card */
+.gamecard{position:sticky;top:-12px;z-index:5;border-radius:16px;border:2px solid var(--ink);background:#fff;overflow:hidden;box-shadow:0 6px 14px -8px rgba(20,18,15,.35)}
+.gamecard.collapsed .gbody{display:none}
+.gbar{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 12px;background:var(--orange);color:var(--ink);border-bottom:2px solid var(--ink);cursor:pointer;user-select:none}
+.gamecard.collapsed .gbar{border-bottom:0}
+.gbar .title{flex:1;min-width:0;font-family:Archivo,sans-serif;font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gbar .status{border-radius:999px;background:var(--ink);color:var(--cream);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:4px 9px;white-space:nowrap}
+.gbar .status.me{background:#fff;color:var(--ink);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 4px rgba(255,255,255,.55)}}
+.gbar .chev{transition:transform .15s}
+.gamecard.collapsed .chev{transform:rotate(-90deg)}
+.gbody iframe{display:block;width:100%;border:0;background:var(--cream);height:360px}
+.gfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;border-top:2px solid var(--ink);background:#fff;font-size:11px;color:rgba(20,18,15,.6)}
+.gfoot button{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--orange-dark)}
+.gfoot button:hover{text-decoration:underline}
+
+/* composer */
+.composer{border-top:2px solid var(--ink);background:#fff;padding:12px}
+.composer .line{display:flex;align-items:flex-end;gap:8px}
+.gp{position:relative;flex-shrink:0}
+.gp>button{display:flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:999px;border:2px solid var(--ink);background:#fff;transition:background .15s}
+.gp>button:hover,.gp>button[aria-expanded=true]{background:rgba(228,113,47,.15)}
+.composer textarea{flex:1;min-height:40px;max-height:112px;resize:none;border-radius:16px;border:2px solid var(--ink);background:#fff;padding:8px 12px;font:inherit;font-size:14px;outline:none;field-sizing:content}
+.composer textarea:focus{border-color:var(--orange)}
+.send{display:flex;width:40px;height:40px;flex-shrink:0;align-items:center;justify-content:center;border-radius:999px;background:var(--ink);color:var(--cream);transition:background .15s,color .15s}
+.send:hover{background:var(--orange);color:var(--ink)}
+.send:disabled{opacity:.4}
+.err{margin:0 0 8px;font-size:12px;font-weight:600;color:#dc2626}
+
+/* game menu: OvertimeInviteMenu.tsx, extended */
+.menu{position:absolute;bottom:100%;left:0;z-index:30;margin-bottom:8px;width:256px;border-radius:16px;border:2px solid var(--ink);background:#fff;padding:8px;box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)}
+.menu .lbl{padding:4px 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(20,18,15,.6)}
+.menu .item{display:flex;width:100%;align-items:center;gap:12px;border-radius:12px;padding:7px 8px;text-align:left}
+.menu .item:hover{background:rgba(228,113,47,.15)}
+.menu .item:disabled{opacity:.45;cursor:default}
+.menu .item:disabled:hover{background:none}
+.menu .em{width:18px;text-align:center;font-size:16px;flex-shrink:0}
+.menu .name{display:block;font-size:14px;font-weight:700;line-height:1.2}
+.menu .sub{display:block;font-size:12px;color:rgba(20,18,15,.6)}
+.menu hr{border:0;border-top:2px solid rgba(20,18,15,.1);margin:6px 4px}
+
+/* launcher */
+.launch{position:relative;display:flex;width:56px;height:56px;align-items:center;justify-content:center;border-radius:999px;border:2px solid var(--ink);background:var(--ink);color:var(--cream);transition:background .15s,color .15s}
+.launch:hover{background:var(--orange);color:var(--ink)}
+.launch .badge{position:absolute;right:-4px;top:-4px;display:flex;height:24px;min-width:24px;align-items:center;justify-content:center;border-radius:999px;border:2px solid var(--cream);background:var(--orange);padding:0 4px;font-size:11px;font-weight:700;color:var(--ink)}
+.you{position:fixed;left:16px;bottom:16px;z-index:40;background:#fff;border:2px solid var(--ink);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;box-shadow:3px 3px 0 0 var(--ink)}
+.you b{color:var(--orange-dark)}
+</style>
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="wordmark"><span class="mark"></span>Film Crew<br>Collective</div>
+  <nav class="site-links"><span>The Stage</span><span>Directory</span><span>Jobs</span><span>Marketplace</span></nav>
+  <div style="display:flex;gap:10px"><span class="pill">Admin Area</span><span class="pill dark">Members Area →</span></div>
+</header>
+
+<main class="site-body">
+  <h1>Members<br>Area<span>.</span></h1>
+  <p>This is a local stand-in for the FCC website so the games can be tried inside the chat before they're built into the site. The chat bubble, bottom right, is a copy of the real one.</p>
+  <div class="note">You are <b id="who">…</b>. Open the chat, tap the 🎮 button and pick a game. <span id="otherhint"></span></div>
+  <div class="cards">
+    <div class="card"><h3>Jobs</h3><p>Nothing here moves. It's scenery.</p></div>
+    <div class="card"><h3>Directory</h3><p>Also scenery.</p></div>
+    <div class="card"><h3>The Stage</h3><p>You guessed it.</p></div>
+  </div>
+</main>
+
+<div class="you">Signed in as <b id="who2">…</b> <span id="swap"></span></div>
+
+<div class="chat-root">
+  <div class="panel" id="panel" role="dialog" aria-label="Messages">
+    <div class="hdr">
+      <button class="icon-btn" aria-label="Back to all messages" title="Back (does nothing in the mock)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></button>
+      <h2 id="hdr-name">…</h2>
+      <button class="icon-btn" aria-label="Open in the Messages page" title="Messages page (mock)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></button>
+      <button class="icon-btn" aria-label="Close messages" id="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+
+    <div class="thread" id="thread" role="log"></div>
+
+    <div class="composer">
+      <p class="err" id="err" hidden></p>
+      <div class="line">
+        <div class="gp">
+          <button type="button" id="gpbtn" aria-expanded="false" aria-label="Play a game or invite to Overtime" title="Play a game">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg>
+          </button>
+          <div class="menu" id="menu" hidden></div>
+        </div>
+        <label for="draft" class="sr">Write a message</label>
+        <textarea id="draft" rows="1" maxlength="2000" placeholder="Write a message..."></textarea>
+        <button class="send" id="sendbtn" aria-label="Send message" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <button class="launch" id="launch" aria-label="Open messages" aria-expanded="true">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+    <span class="badge" id="badge" hidden>0</span>
+  </button>
+</div>
+
+<script>
+/* ---- identity & helpers ---- */
+const Q = new URLSearchParams(location.search);
+const ME = Q.get('as') === '1' ? 1 : 0;
+const GAMES_ORIGIN = location.origin;        // FCC_GAMES_URL on the real site
+const api = (path, body) => fetch(path + (body ? '' : (path.includes('?') ? '&' : '?') + 'as=' + ME), body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ as: ME }, body)) } : { cache: 'no-store' }).then(r => r.json());
+const el = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clock = iso => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+const dayLabel = iso => { const d = new Date(iso), days = Math.round((startOfDay(new Date()) - startOfDay(d)) / 864e5); return days <= 0 ? 'Today' : days === 1 ? 'Yesterday' : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); };
+const sameDay = (a, b) => startOfDay(new Date(a)) === startOfDay(new Date(b));
+const enc = obj => btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+let data = null, open = true, collapsed = false, knownIds = new Set(), lastTurn = -1, lastGameId = null, frameReady = false;
+const thread = el('thread');
+
+/* ---- rendering ---- */
+function render() {
+  const you = data.players[ME], them = data.players[1 - ME];
+  el('who').textContent = you; el('who2').textContent = you; el('hdr-name').textContent = them;
+  el('otherhint').textContent = `${them} plays from the same address with ?as=${1 - ME}.`;
+  el('swap').innerHTML = ` · <a href="?as=${1 - ME}" style="color:var(--ink)">switch to ${esc(them)}</a>`;
+  document.title = (data.unread ? `(${data.unread}) ` : '') + `Chat with ${them} · FCC mock`;
+  el('badge').hidden = !(data.unread && !open); el('badge').textContent = data.unread;
+
+  const stick = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 60;
+  const g = data.game;
+
+  // --- pinned game card (kept across renders so the iframe isn't reloaded) ---
+  let card = el('gamecard');
+  if (g && (!g.over || Date.now() - new Date(g.startedAt).getTime() < 36e5)) {
+    if (!card || card.dataset.gid !== g.id) {
+      card && card.remove();
+      card = document.createElement('div'); card.className = 'gamecard'; card.id = 'gamecard'; card.dataset.gid = g.id;
+      card.innerHTML = `<div class="gbar" id="gbar"><span class="title">${g.emoji} ${esc(g.title)}</span><span class="status" id="gstatus"></span>
+        <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        <div class="gbody"><iframe id="gframe" title="${esc(g.title)}" allow="autoplay"></iframe>
+        <div class="gfoot"><span id="gfoot">${esc(data.players[g.seats[0]])} started · ${esc(data.players[g.seats[1]])} to reply</span><button type="button" id="abandon">End game</button></div></div>`;
+      thread.prepend(card);
+      card.querySelector('#gbar').onclick = () => { collapsed = !collapsed; card.classList.toggle('collapsed', collapsed); };
+      card.querySelector('#abandon').onclick = async () => { if (confirm('End this game for both of you?')) { await api('/api/game/abandon', {}); poll(); } };
+      const mySeat = g.seats.indexOf(ME);
+      const q = new URLSearchParams({ embed: '1', bare: '1', origin: location.origin, p0: data.players[g.seats[0]], p1: data.players[g.seats[1]], me: String(mySeat) });
+      if (!g.state) q.set('new', '1');
+      frameReady = false; lastTurn = g.turn;
+      card.querySelector('#gframe').src = `${GAMES_ORIGIN}/games/${g.file}.html?${q}` + (g.state ? '#' + enc(g.state) : '');
+    } else if (g.turn !== lastTurn && frameReady) {
+      // The other player moved: push the new state into the open game (no reload).
+      lastTurn = g.turn;
+      card.querySelector('#gframe').contentWindow.postMessage({ v: 1, type: 'fcc:load', state: g.state, me: g.seats.indexOf(ME) }, GAMES_ORIGIN);
+      if (g.next === ME) card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+    const st = card.querySelector('#gstatus');
+    if (g.over) { const w = g.over.winner == null ? null : g.seats[g.over.winner]; st.textContent = w == null ? 'Draw' : (w === ME ? 'You won!' : `${data.players[w]} won`); st.className = 'status'; }
+    else if (g.next === ME) { st.textContent = 'Your move'; st.className = 'status me'; }
+    else { st.textContent = `Waiting for ${data.players[g.next]}`; st.className = 'status'; }
+    card.querySelector('#gfoot').textContent = g.over ? 'Game over · rematch from the result screen' : `Move ${g.turn} · ${data.players[g.seats[0]]} vs ${data.players[g.seats[1]]}`;
+  } else if (card) { card.remove(); }
+
+  // --- messages ---
+  [...thread.children].forEach(c => { if (c.id !== 'gamecard') c.remove(); });
+  const msgs = data.messages;
+  if (!msgs.length) thread.insertAdjacentHTML('beforeend', `<p class="empty">No messages yet. Say hello to ${esc(them)}.</p>`);
+  msgs.forEach((m, i) => {
+    let html = '';
+    if (i === 0 || !sameDay(msgs[i - 1].sentAt, m.sentAt)) html += `<p class="day">${dayLabel(m.sentAt)}</p>`;
+    if (m.gameId) {
+      const turn = /your move/i.test(m.body) && m.from !== ME;
+      html += `<div class="pinline${turn ? ' turn' : ''}"><span>${esc(m.body)}</span></div>`;
+    } else {
+      html += `<div class="row ${m.from === ME ? 'mine' : ''}"><div class="bubble"><p>${esc(m.body)}</p><p class="t">${clock(m.sentAt)}</p></div></div>`;
+    }
+    thread.insertAdjacentHTML('beforeend', html);
+  });
+  const newFromThem = msgs.some(m => m.from !== ME && !knownIds.has(m.id));
+  knownIds = new Set(msgs.map(m => m.id));
+  if (stick || newFromThem) thread.scrollTop = thread.scrollHeight;
+}
+
+/* ---- polling, like usePoll (4 s on the site; 2 s here) ---- */
+async function poll() {
+  if (document.visibilityState !== 'visible') return;
+  const d = await api('/api/thread').catch(() => null);
+  if (!d) return;
+  data = d; render();
+  if (open && d.unread) { await api('/api/read', {}); data.unread = 0; render(); }
+}
+setInterval(poll, 2000); document.addEventListener('visibilitychange', poll); poll();
+
+/* ---- messages from the game frame ---- */
+window.addEventListener('message', async e => {
+  if (e.origin !== GAMES_ORIGIN || !e.data || e.data.v !== 1) return;
+  const m = e.data, frame = document.getElementById('gframe');
+  if (!frame) return;
+  if (m.type === 'fcc:ready') { frameReady = true; return; }
+  if (m.type === 'fcc:height') { frame.style.height = Math.min(Math.max(220, m.height), 1400) + 'px'; return; }
+  if (m.type === 'fcc:move') {
+    const r = await api('/api/game/move', { id: data.game.id, state: m.state, text: m.text, next: m.next, over: m.over });
+    if (!r.ok) { showErr(r.error); return; }
+    lastTurn = r.game.turn;
+    // Show the mover the waiting screen straight away.
+    frame.contentWindow.postMessage({ v: 1, type: 'fcc:load', state: r.game.state, me: r.game.seats.indexOf(ME) }, GAMES_ORIGIN);
+    poll();
+  }
+  if (m.type === 'fcc:rematch') { const r = await api('/api/game/rematch', {}); if (!r.ok) showErr(r.error); poll(); }
+});
+
+/* ---- composer ---- */
+const draft = el('draft'), sendbtn = el('sendbtn');
+draft.addEventListener('input', () => { sendbtn.disabled = !draft.value.trim(); });
+draft.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer: fine)').matches) { e.preventDefault(); send(); } });
+sendbtn.onclick = send;
+async function send() {
+  const body = draft.value.trim(); if (!body) return;
+  draft.value = ''; sendbtn.disabled = true;
+  const r = await api('/api/message', { body }); if (!r.ok) showErr(r.error);
+  poll();
+}
+function showErr(t) { const e = el('err'); e.textContent = t; e.hidden = false; setTimeout(() => (e.hidden = true), 4000); }
+
+/* ---- game menu ---- */
+const gpbtn = el('gpbtn'), menu = el('menu');
+gpbtn.onclick = () => { const o = menu.hidden; menu.hidden = !o; gpbtn.setAttribute('aria-expanded', String(o)); if (o) buildMenu(); };
+document.addEventListener('pointerdown', e => { if (!menu.hidden && !e.target.closest('.gp')) { menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false'); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false'); } });
+function buildMenu() {
+  const active = data && data.game && !data.game.over;
+  const rows = Object.entries(data.games).map(([id, g]) => `<button type="button" class="item" data-game="${id}"><span class="em">${g.emoji}</span><span><span class="name">${esc(g.title)}${active && data.game.game === id ? ' · Resume' : ''}</span><span class="sub">${esc(g.blurb)}</span></span></button>`).join('');
+  menu.innerHTML = `<p class="lbl">Play a game</p>${rows}<hr><p class="lbl">Invite to Overtime</p>
+    <button type="button" class="item" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></svg><span><span class="name">Duel</span><span class="sub">Head to head</span></span></button>
+    <button type="button" class="item" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span><span class="name">Co-op</span><span class="sub">Play together</span></span></button>`;
+  menu.querySelectorAll('[data-game]').forEach(b => b.onclick = async () => {
+    menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false');
+    if (active && data.game.game !== b.dataset.game && !confirm(`You're mid-game in ${data.game.title}. End it and start ${data.games[b.dataset.game].title}?`)) return;
+    if (active && data.game.game !== b.dataset.game) await api('/api/game/abandon', {});
+    const r = await api('/api/game/start', { game: b.dataset.game }); if (!r.ok) showErr(r.error);
+    collapsed = false; await poll(); const c = el('gamecard'); c && c.classList.remove('collapsed'); thread.scrollTop = 0;
+  });
+}
+
+/* ---- open / close ---- */
+const panel = el('panel'), launch = el('launch');
+const setOpen = v => { open = v; panel.classList.toggle('hidden', !v); launch.setAttribute('aria-expanded', String(v)); if (v) poll(); else render(); };
+launch.onclick = () => setOpen(!open);
+el('close').onclick = () => setOpen(false);
+</script>
+</body>
+</html>

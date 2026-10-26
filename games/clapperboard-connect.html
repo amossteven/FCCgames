@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Clapperboard Connect · FCC Games</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/fcc.css?v=2">
+<link rel="stylesheet" href="../shared/fcc.css?v=3">
 <style>
 .boardwrap{background:#1B1B1B;border:6px solid var(--orange);border-radius:18px;padding:12px;box-shadow:var(--shadow);max-width:520px;margin:0 auto}
 .cols{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px}
@@ -36,7 +36,7 @@
 <body>
 <div id="fcc-header"></div>
 <main id="app" class="wrap"></main>
-<script src="../shared/fcc.js?v=5"></script>
+<script src="../shared/fcc.js?v=6"></script>
 <script>
 const W = 7, H = 6;
 function newState(players, seed) { return { p: players, seed, b: '0'.repeat(W * H), cut: [1, 1], n: 0 }; }

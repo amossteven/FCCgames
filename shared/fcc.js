@@ -125,6 +125,7 @@
   function header(cfg) {
     const root = document.getElementById('fcc-header');
     if (!root) return;
+    if (EMBED && Q.get('bare') === '1') { root.remove(); document.body.classList.add('bare'); return; }
     const mute = h('button', { class: 'btn sm ghost', title: 'Toggle sound', onClick: () => { FCC.muted = !FCC.muted; localStorage.setItem('fcc-muted', FCC.muted ? '1' : '0'); mute.textContent = FCC.muted ? '🔇' : '🔊'; if (!FCC.muted) FCC.sfx.click(); } }, FCC.muted ? '🔇' : '🔊');
     root.append(h('div', { class: 'bar' },
       EMBED ? null : h('a', { class: 'back', href: '../index.html' }, '◀ FCC GAMES'),
