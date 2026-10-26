@@ -20,13 +20,7 @@ iframe{width:100%;border:0;display:block;border-radius:14px;background:var(--pan
   <div class="panel">
     <div class="row">
       <label style="margin:0">Game</label>
-      <select id="game" style="width:auto">
-        <option value="telly-trumps">🃏 Telly Trumps</option>
-        <option value="channel-hopper">📺 Channel Hopper</option>
-        <option value="clapperboard-connect" selected>🎞️ Clapperboard Connect</option>
-        <option value="spoiler-alert">🤫 Spoiler Alert</option>
-        <option value="bank-it">💷 Bank It!</option>
-      </select>
+      <select id="game" style="width:auto"><option value="pop-and-clap" selected>🎬 Pop &amp; Clap</option></select>
       <button class="btn primary sm" id="start">Start as Steve</button>
       <span class="grow"></span>
       <span>Viewing as <span class="seat" id="seat">—</span></span>
@@ -44,7 +38,7 @@ iframe{width:100%;border:0;display:block;border-radius:14px;background:var(--pan
 // What the FCC site needs to know, in one place.
 const GAMES_ORIGIN = location.origin;           // FCC_GAMES_URL on the site
 const players = ['Steve', 'Jo'];
-let seat = 0, state = null, gameFile = 'clapperboard-connect';
+let seat = 0, state = null, gameFile = 'pop-and-clap';
 const frame = document.getElementById('frame'), log = document.getElementById('log');
 
 const enc = obj => btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');

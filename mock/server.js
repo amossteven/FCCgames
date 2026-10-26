@@ -11,11 +11,7 @@ const PORT = Number(process.env.PORT || 8766);
 const PLAYERS = (process.env.PLAYERS || 'Steve,Claude').split(',');
 
 const GAMES = {
-  trumps: { file: 'telly-trumps', title: 'Telly Trumps', emoji: '🃏', blurb: 'Top Trumps with British film & TV' },
-  hopper: { file: 'channel-hopper', title: 'Channel Hopper', emoji: '📺', blurb: 'Battleships on the TV listings' },
-  connect: { file: 'clapperboard-connect', title: 'Clapperboard Connect', emoji: '🎞️', blurb: 'Connect Four with a Director\'s Cut' },
-  spoiler: { file: 'spoiler-alert', title: 'Spoiler Alert', emoji: '🤫', blurb: 'Wordle duel of British titles' },
-  bankit: { file: 'bank-it', title: 'Bank It!', emoji: '💷', blurb: 'Push-your-luck film & TV quiz' },
+  popclap: { file: 'pop-and-clap', title: 'Pop & Clap', emoji: '🎬', blurb: 'Connect four: clapperboards vs popcorn' },
 };
 
 const fresh = () => ({ players: PLAYERS, messages: [], game: null, history: [], readAt: [0, 0] });
@@ -32,7 +28,23 @@ const api = {
     const me = Number(q.as ?? 0);
     const other = 1 - me;
     const unread = db.messages.filter(m => m.from === other && new Date(m.sentAt).getTime() > (db.readAt[me] || 0)).length;
-    return { players: db.players, me, messages: db.messages.slice(-60), game: db.game, unread, games: GAMES };
+    return { players: db.players, me, messages: db.messages.slice(-60), game: db.game, history: db.history.slice(-30), unread, games: GAMES };
+  },
+  'GET /api/scoreboard': (q) => {
+    const me = Number(q.as ?? 0);
+    const done = db.history.filter(g => g.over);
+    const per = {};
+    for (const g of done) {
+      const k = g.game; per[k] = per[k] || { title: g.title, emoji: g.emoji, me: 0, them: 0, draws: 0, played: 0 };
+      per[k].played++;
+      const w = g.over.winner == null ? null : g.seats[g.over.winner];
+      if (w == null) per[k].draws++; else if (w === me) per[k].me++; else per[k].them++;
+    }
+    const recent = done.slice(-12).reverse().map(g => { const w = g.over.winner == null ? null : g.seats[g.over.winner]; return { title: g.title, emoji: g.emoji, at: g.finishedAt, result: w == null ? 'draw' : (w === me ? 'won' : 'lost'), reason: g.over.reason || '' }; });
+    let streak = 0, kind = null;
+    for (const r of recent) { if (r.result === 'draw') break; if (kind && r.result !== kind) break; kind = r.result; streak++; }
+    const totals = Object.values(per).reduce((a, p) => ({ me: a.me + p.me, them: a.them + p.them, draws: a.draws + p.draws, played: a.played + p.played }), { me: 0, them: 0, draws: 0, played: 0 });
+    return { players: db.players, me, per: Object.values(per), totals, recent, streak: { kind, count: streak }, abandoned: db.history.filter(g => !g.over).length };
   },
   'POST /api/read': (q, b) => { db.readAt[Number(b.as)] = Date.now(); save(); return { ok: true }; },
   'POST /api/message': (q, b) => {
@@ -79,7 +91,7 @@ const api = {
     pin(Number(b.as), `${g.emoji} Rematch! ${db.players[starter]} to start ${g.title}`, db.game.id); save();
     return { ok: true, game: db.game };
   },
-  'POST /api/game/abandon': () => { if (db.game) db.history.push({ ...db.game, abandonedAt: now() }); db.game = null; save(); return { ok: true }; },
+  'POST /api/game/abandon': (q, b) => { if (db.game && !db.game.over) { db.history.push({ ...db.game, abandonedAt: now() }); pin(Number(b.as), `${db.game.emoji} ${db.players[Number(b.as)]} ended ${db.game.title} early`, db.game.id); } db.game = null; save(); return { ok: true }; },
   'POST /api/reset': () => { db = fresh(); save(); return { ok: true }; },
 };
 

@@ -61,21 +61,45 @@ svg{display:block}
 .pinline span{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:rgba(20,18,15,.06);padding:4px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:rgba(20,18,15,.6)}
 .pinline.turn span{background:rgba(228,113,47,.15);color:var(--orange-dark)}
 
-/* the pinned game card */
-.gamecard{position:sticky;top:-12px;z-index:5;border-radius:16px;border:2px solid var(--ink);background:#fff;overflow:hidden;box-shadow:0 6px 14px -8px rgba(20,18,15,.35)}
+/* the game card: a dropdown, closed by default; the live one is pinned at the top, finished ones sit in the thread */
+.gamecard{border-radius:16px;border:2px solid var(--ink);background:#fff;overflow:hidden}
+.gamecard.live{position:sticky;top:-12px;z-index:5;box-shadow:0 6px 14px -8px rgba(20,18,15,.35)}
 .gamecard.collapsed .gbody{display:none}
-.gbar{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 12px;background:var(--orange);color:var(--ink);border-bottom:2px solid var(--ink);cursor:pointer;user-select:none}
+.gbar{display:flex;align-items:center;gap:8px;padding:7px 10px 7px 12px;background:var(--orange);color:var(--ink);border-bottom:2px solid var(--ink);cursor:pointer;user-select:none}
 .gamecard.collapsed .gbar{border-bottom:0}
+.gamecard.done .gbar{background:var(--cream-dark)}
+.gamecard.done.won .gbar{background:var(--orange)}
+.gamecard.myturn.collapsed .gbar{animation:flash 1.1s ease-in-out infinite}
+@keyframes flash{0%,100%{background:var(--orange)}50%{background:var(--orange-bright);box-shadow:inset 0 0 0 2px #fff}}
 .gbar .title{flex:1;min-width:0;font-family:Archivo,sans-serif;font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gbar .status{border-radius:999px;background:var(--ink);color:var(--cream);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:4px 9px;white-space:nowrap}
-.gbar .status.me{background:#fff;color:var(--ink);animation:pulse 1.6s ease-in-out infinite}
-@keyframes pulse{50%{box-shadow:0 0 0 4px rgba(255,255,255,.55)}}
-.gbar .chev{transition:transform .15s}
+.gbar .status.me{background:#fff;color:var(--ink)}
+.gbar .chev{transition:transform .15s;flex-shrink:0}
 .gamecard.collapsed .chev{transform:rotate(-90deg)}
-.gbody iframe{display:block;width:100%;border:0;background:var(--cream);height:360px}
-.gfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;border-top:2px solid var(--ink);background:#fff;font-size:11px;color:rgba(20,18,15,.6)}
+.gbody iframe{display:block;width:100%;border:0;background:var(--cream);height:300px}
+.gfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 10px;border-top:2px solid var(--ink);background:#fff;font-size:11px;color:rgba(20,18,15,.6)}
 .gfoot button{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--orange-dark)}
 .gfoot button:hover{text-decoration:underline}
+
+/* scoreboard view */
+.score{flex:1;overflow-y:auto;background:rgba(237,232,226,.5);padding:14px 12px}
+.score .h2h{border:2px solid var(--ink);border-radius:16px;background:#fff;padding:14px;text-align:center;box-shadow:5px 5px 0 0 var(--ink)}
+.score .names{display:flex;justify-content:space-between;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.score .big{font-family:Archivo,sans-serif;font-weight:900;font-size:44px;line-height:1;margin:6px 0 2px;letter-spacing:-.02em}
+.score .big .me{color:var(--orange-dark)}
+.score .sub{font-size:12px;color:rgba(20,18,15,.6)}
+.score .streak{display:inline-block;margin-top:8px;border-radius:999px;background:var(--ink);color:var(--cream);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:4px 10px}
+.score h3{margin:16px 4px 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:rgba(20,18,15,.6)}
+.score .pergame{display:grid;grid-template-columns:1fr auto auto auto;gap:4px 10px;align-items:center;border:2px solid var(--ink);border-radius:12px;background:#fff;padding:10px 12px;font-size:13px}
+.score .pergame b{font-family:Archivo,sans-serif;font-weight:900;font-size:16px}
+.score .pergame .l{font-size:10px;font-weight:700;text-transform:uppercase;color:rgba(20,18,15,.5)}
+.score ul{list-style:none;margin:0;padding:0;border:2px solid var(--ink);border-radius:12px;background:#fff;overflow:hidden}
+.score li{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:2px solid rgba(20,18,15,.1);font-size:13px}
+.score li:first-child{border-top:0}
+.score li .r{margin-left:auto;border-radius:999px;padding:3px 9px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.score li .r.won{background:var(--orange);color:var(--ink)}.score li .r.lost{background:var(--ink);color:var(--cream)}.score li .r.draw{background:var(--cream-dark)}
+.score li .d{font-size:11px;color:rgba(20,18,15,.5)}
+.score .empty{text-align:center;padding:30px 10px;color:rgba(20,18,15,.5)}
 
 /* composer */
 .composer{border-top:2px solid var(--ink);background:#fff;padding:12px}
@@ -134,13 +158,14 @@ svg{display:block}
 <div class="chat-root">
   <div class="panel" id="panel" role="dialog" aria-label="Messages">
     <div class="hdr">
-      <button class="icon-btn" aria-label="Back to all messages" title="Back (does nothing in the mock)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></button>
+      <button class="icon-btn" aria-label="Back" id="back" title="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></button>
       <h2 id="hdr-name">…</h2>
       <button class="icon-btn" aria-label="Open in the Messages page" title="Messages page (mock)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></button>
       <button class="icon-btn" aria-label="Close messages" id="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
 
     <div class="thread" id="thread" role="log"></div>
+    <div class="score" id="score" hidden></div>
 
     <div class="composer">
       <p class="err" id="err" hidden></p>
@@ -178,13 +203,43 @@ const dayLabel = iso => { const d = new Date(iso), days = Math.round((startOfDay
 const sameDay = (a, b) => startOfDay(new Date(a)) === startOfDay(new Date(b));
 const enc = obj => btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-let data = null, open = true, collapsed = false, knownIds = new Set(), lastTurn = -1, lastGameId = null, frameReady = false;
+let data = null, open = true, knownIds = new Set(), lastTurn = -1, frameReady = false, lastSig = '';
+const doneCards = {};   // finished games' folded cards, by game id, so their frames aren't rebuilt on every poll
+
+const CHEV = '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+function frameUrl(g) {
+  const q = new URLSearchParams({ embed: '1', bare: '1', origin: location.origin, p0: data.players[g.seats[0]], p1: data.players[g.seats[1]], me: String(g.seats.indexOf(ME)) });
+  if (!g.state) q.set('new', '1');
+  return `${GAMES_ORIGIN}/games/${g.file}.html?${q}` + (g.state ? '#' + enc(g.state) : '');
+}
+function loadFrame(card, g) { const f = card.querySelector('iframe'); if (f && !f.src) f.src = frameUrl(g); }
+function makeCard(g, opts) {
+  const card = document.createElement('div');
+  card.className = 'gamecard' + (opts.live ? ' live' : ' done') + (opts.open ? '' : ' collapsed');
+  card.dataset.gid = g.id;
+  if (opts.live) card.id = 'gamecard';
+  let status = '';
+  if (g.over) { const w = g.over.winner == null ? null : g.seats[g.over.winner]; status = w == null ? 'Draw' : (w === ME ? 'You won' : `${data.players[w]} won`); if (w === ME) card.classList.add('won'); }
+  card.innerHTML = `<div class="gbar"><span class="title">${g.emoji} ${esc(g.title)}</span><span class="status">${esc(status)}</span>${CHEV}</div>
+    <div class="gbody"><iframe ${opts.live ? 'id="gframe"' : ''} title="${esc(g.title)}" allow="autoplay"></iframe>
+    <div class="gfoot"><span>${g.over ? (g.over.reason || 'Game over') : ''}</span>${opts.live ? '<button type="button" class="abandon">End game</button>' : ''}</div></div>`;
+  card.querySelector('.gbar').onclick = () => {
+    const nowCollapsed = card.classList.toggle('collapsed');
+    if (opts.live) sessionStorage.setItem('open-' + g.id, nowCollapsed ? '0' : '1');
+    if (!nowCollapsed) { loadFrame(card, g); card.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+  };
+  const ab = card.querySelector('.abandon');
+  if (ab) ab.onclick = async () => { if (confirm('End this game for both of you?')) { await api('/api/game/abandon', {}); poll(); } };
+  // Finished cards get their frame on first open; the live card is loaded by the caller when open.
+  card.querySelectorAll('iframe').forEach(f => f.addEventListener('load', () => {}));
+  return card;
+}
 const thread = el('thread');
 
 /* ---- rendering ---- */
 function render() {
   const you = data.players[ME], them = data.players[1 - ME];
-  el('who').textContent = you; el('who2').textContent = you; el('hdr-name').textContent = them;
+  el('who').textContent = you; el('who2').textContent = you; if (viewing !== 'score') el('hdr-name').textContent = them;
   el('otherhint').textContent = `${them} plays from the same address with ?as=${1 - ME}.`;
   el('swap').innerHTML = ` · <a href="?as=${1 - ME}" style="color:var(--ink)">switch to ${esc(them)}</a>`;
   document.title = (data.unread ? `(${data.unread}) ` : '') + `Chat with ${them} · FCC mock`;
@@ -193,47 +248,50 @@ function render() {
   const stick = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 60;
   const g = data.game;
 
-  // --- pinned game card (kept across renders so the iframe isn't reloaded) ---
+  // --- game cards: the live one pinned at the top (a dropdown, closed unless you opened it, flashing on your move);
+  //     finished ones stay in the thread, folded, with the result in their bar ---
+  const live = g && !g.over ? g : null;
   let card = el('gamecard');
-  if (g && (!g.over || Date.now() - new Date(g.startedAt).getTime() < 36e5)) {
-    if (!card || card.dataset.gid !== g.id) {
+  if (live) {
+    const mySeat = live.seats.indexOf(ME);
+    if (!card || card.dataset.gid !== live.id) {
       card && card.remove();
-      card = document.createElement('div'); card.className = 'gamecard'; card.id = 'gamecard'; card.dataset.gid = g.id;
-      card.innerHTML = `<div class="gbar" id="gbar"><span class="title">${g.emoji} ${esc(g.title)}</span><span class="status" id="gstatus"></span>
-        <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
-        <div class="gbody"><iframe id="gframe" title="${esc(g.title)}" allow="autoplay"></iframe>
-        <div class="gfoot"><span id="gfoot">${esc(data.players[g.seats[0]])} started · ${esc(data.players[g.seats[1]])} to reply</span><button type="button" id="abandon">End game</button></div></div>`;
+      // The starter sees their new game open (they just chose it); the other player gets it folded and flashing.
+      const openByDefault = live.turn === 0 && live.seats[0] === ME;
+      card = makeCard(live, { live: true, open: openByDefault || sessionStorage.getItem('open-' + live.id) === '1' });
       thread.prepend(card);
-      card.querySelector('#gbar').onclick = () => { collapsed = !collapsed; card.classList.toggle('collapsed', collapsed); };
-      card.querySelector('#abandon').onclick = async () => { if (confirm('End this game for both of you?')) { await api('/api/game/abandon', {}); poll(); } };
-      const mySeat = g.seats.indexOf(ME);
-      const q = new URLSearchParams({ embed: '1', bare: '1', origin: location.origin, p0: data.players[g.seats[0]], p1: data.players[g.seats[1]], me: String(mySeat) });
-      if (!g.state) q.set('new', '1');
-      frameReady = false; lastTurn = g.turn;
-      card.querySelector('#gframe').src = `${GAMES_ORIGIN}/games/${g.file}.html?${q}` + (g.state ? '#' + enc(g.state) : '');
-    } else if (g.turn !== lastTurn && frameReady) {
-      // The other player moved: push the new state into the open game (no reload).
-      lastTurn = g.turn;
-      card.querySelector('#gframe').contentWindow.postMessage({ v: 1, type: 'fcc:load', state: g.state, me: g.seats.indexOf(ME) }, GAMES_ORIGIN);
-      if (g.next === ME) card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      frameReady = false; lastTurn = live.turn;
+      if (!card.classList.contains('collapsed')) loadFrame(card, live);
+    } else if (live.turn !== lastTurn && frameReady) {
+      lastTurn = live.turn;
+      card.querySelector('#gframe').contentWindow.postMessage({ v: 1, type: 'fcc:load', state: live.state, me: mySeat }, GAMES_ORIGIN);
     }
-    const st = card.querySelector('#gstatus');
-    if (g.over) { const w = g.over.winner == null ? null : g.seats[g.over.winner]; st.textContent = w == null ? 'Draw' : (w === ME ? 'You won!' : `${data.players[w]} won`); st.className = 'status'; }
-    else if (g.next === ME) { st.textContent = 'Your move'; st.className = 'status me'; }
-    else { st.textContent = `Waiting for ${data.players[g.next]}`; st.className = 'status'; }
-    card.querySelector('#gfoot').textContent = g.over ? 'Game over · rematch from the result screen' : `Move ${g.turn} · ${data.players[g.seats[0]]} vs ${data.players[g.seats[1]]}`;
+    card.classList.toggle('myturn', live.next === ME);
+    const st = card.querySelector('.status');
+    if (live.next === ME) { st.textContent = 'Your move'; st.className = 'status me'; }
+    else { st.textContent = `Waiting for ${data.players[live.next]}`; st.className = 'status'; }
+    card.querySelector('.gfoot span').textContent = `Move ${live.turn} · ${data.players[live.seats[0]]} vs ${data.players[live.seats[1]]}`;
   } else if (card) { card.remove(); }
 
-  // --- messages ---
-  [...thread.children].forEach(c => { if (c.id !== 'gamecard') c.remove(); });
+  // --- messages: rebuilt only when the list changed, so folded result cards (and their frames) aren't torn down on every poll ---
   const msgs = data.messages;
+  const sig = msgs.map(m => m.id).join(',') + '|' + (data.history || []).length;
+  if (sig === lastSig) return;
+  lastSig = sig;
+  [...thread.children].forEach(c => { if (c.id !== 'gamecard') c.remove(); });
   if (!msgs.length) thread.insertAdjacentHTML('beforeend', `<p class="empty">No messages yet. Say hello to ${esc(them)}.</p>`);
   msgs.forEach((m, i) => {
     let html = '';
     if (i === 0 || !sameDay(msgs[i - 1].sentAt, m.sentAt)) html += `<p class="day">${dayLabel(m.sentAt)}</p>`;
-    if (m.gameId) {
-      const turn = /your move/i.test(m.body) && m.from !== ME;
-      html += `<div class="pinline${turn ? ' turn' : ''}"><span>${esc(m.body)}</span></div>`;
+    const finished = m.gameId && (data.history || []).find(h => h.id === m.gameId && /^(🏆|🤝)/.test(m.body));
+    if (finished) {
+      thread.insertAdjacentHTML('beforeend', html); html = '';
+      const kept = doneCards[finished.id] || (doneCards[finished.id] = makeCard(finished, { live: false, open: false }));
+      thread.append(kept);
+    } else if (m.gameId) {
+      // Move nudges drive the unread count and emails but are not drawn: the flashing card is the signal.
+      // Only the "started" and "rematch" lines are kept, so the thread shows when a game began.
+      if (/started|Rematch/.test(m.body)) html += `<div class="pinline"><span>${esc(m.body)}</span></div>`;
     } else {
       html += `<div class="row ${m.from === ME ? 'mine' : ''}"><div class="bubble"><p>${esc(m.body)}</p><p class="t">${clock(m.sentAt)}</p></div></div>`;
     }
@@ -257,15 +315,19 @@ setInterval(poll, 2000); document.addEventListener('visibilitychange', poll); po
 /* ---- messages from the game frame ---- */
 window.addEventListener('message', async e => {
   if (e.origin !== GAMES_ORIGIN || !e.data || e.data.v !== 1) return;
-  const m = e.data, frame = document.getElementById('gframe');
-  if (!frame) return;
+  const m = e.data;
+  const sender = [...document.querySelectorAll('.gamecard iframe')].find(f => f.contentWindow === e.source);
+  if (!sender) return;
+  const frame = sender;
+  if (m.type === 'fcc:height') { frame.style.height = Math.min(Math.max(160, m.height), 1400) + 'px'; return; }
+  if (frame.id !== 'gframe') { if (m.type === 'fcc:rematch') { const r = await api('/api/game/rematch', {}); if (!r.ok) showErr(r.error); poll(); } return; }
   if (m.type === 'fcc:ready') { frameReady = true; return; }
-  if (m.type === 'fcc:height') { frame.style.height = Math.min(Math.max(220, m.height), 1400) + 'px'; return; }
   if (m.type === 'fcc:move') {
     const r = await api('/api/game/move', { id: data.game.id, state: m.state, text: m.text, next: m.next, over: m.over });
     if (!r.ok) { showErr(r.error); return; }
     lastTurn = r.game.turn;
-    // Show the mover the waiting screen straight away.
+    if (r.game.over) { poll(); return; }     // the live card becomes a folded result card on the next render
+    // Show the mover the waiting board straight away.
     frame.contentWindow.postMessage({ v: 1, type: 'fcc:load', state: r.game.state, me: r.game.seats.indexOf(ME) }, GAMES_ORIGIN);
     poll();
   }
@@ -293,17 +355,45 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { menu.hidde
 function buildMenu() {
   const active = data && data.game && !data.game.over;
   const rows = Object.entries(data.games).map(([id, g]) => `<button type="button" class="item" data-game="${id}"><span class="em">${g.emoji}</span><span><span class="name">${esc(g.title)}${active && data.game.game === id ? ' · Resume' : ''}</span><span class="sub">${esc(g.blurb)}</span></span></button>`).join('');
-  menu.innerHTML = `<p class="lbl">Play a game</p>${rows}<hr><p class="lbl">Invite to Overtime</p>
+  menu.innerHTML = `<p class="lbl">Play a game</p>${rows}
+    <button type="button" class="item" id="scorebtn"><span class="em">🏆</span><span><span class="name">Scoreboard</span><span class="sub">You vs ${esc(data.players[1 - ME])}</span></span></button>
+    <hr><p class="lbl">Invite to Overtime</p>
     <button type="button" class="item" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></svg><span><span class="name">Duel</span><span class="sub">Head to head</span></span></button>
     <button type="button" class="item" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span><span class="name">Co-op</span><span class="sub">Play together</span></span></button>`;
+  menu.querySelector('#scorebtn').onclick = () => { menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false'); showScoreboard(); };
   menu.querySelectorAll('[data-game]').forEach(b => b.onclick = async () => {
     menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false');
     if (active && data.game.game !== b.dataset.game && !confirm(`You're mid-game in ${data.game.title}. End it and start ${data.games[b.dataset.game].title}?`)) return;
     if (active && data.game.game !== b.dataset.game) await api('/api/game/abandon', {});
     const r = await api('/api/game/start', { game: b.dataset.game }); if (!r.ok) showErr(r.error);
-    collapsed = false; await poll(); const c = el('gamecard'); c && c.classList.remove('collapsed'); thread.scrollTop = 0;
+    await poll(); const c = el('gamecard'); if (c && c.classList.contains('collapsed')) c.querySelector('.gbar').click(); thread.scrollTop = 0;
   });
 }
+
+/* ---- scoreboard (a view inside the window, like the Messages list) ---- */
+let viewing = 'thread';
+async function showScoreboard() {
+  viewing = 'score';
+  const sb = await api('/api/scoreboard');
+  const me = sb.players[sb.me], them = sb.players[1 - sb.me];
+  el('hdr-name').textContent = 'Scoreboard';
+  const t = sb.totals;
+  let html = `<div class="h2h"><div class="names"><span>${esc(me)}</span><span>${esc(them)}</span></div>
+    <div class="big"><span class="me">${t.me}</span> – ${t.them}</div>
+    <div class="sub">${t.played} game${t.played === 1 ? '' : 's'} · ${t.draws} draw${t.draws === 1 ? '' : 's'}${sb.abandoned ? ` · ${sb.abandoned} ended early` : ''}</div>
+    ${sb.streak.count > 1 ? `<span class="streak">${sb.streak.kind === 'won' ? '🔥 ' + sb.streak.count + ' in a row' : '😬 lost ' + sb.streak.count + ' in a row'}</span>` : ''}</div>`;
+  if (sb.per.length) {
+    html += '<h3>By game</h3>';
+    for (const p of sb.per) html += `<div class="pergame"><span>${p.emoji} <strong>${esc(p.title)}</strong></span><span><b>${p.me}</b><br><span class="l">You</span></span><span><b>${p.draws}</b><br><span class="l">Draws</span></span><span><b>${p.them}</b><br><span class="l">${esc(them)}</span></span></div>`;
+  }
+  html += '<h3>Recent results</h3>';
+  html += sb.recent.length ? '<ul>' + sb.recent.map(r => `<li><span>${r.emoji}</span><span><strong>${esc(r.title)}</strong><br><span class="d">${new Date(r.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · ${esc(r.reason)}</span></span><span class="r ${r.result}">${r.result}</span></li>`).join('') + '</ul>'
+       : `<div class="empty">No finished games yet. Start one from the 🎮 menu.</div>`;
+  el('score').innerHTML = html;
+  el('score').hidden = false; thread.hidden = true; document.querySelector('.composer').hidden = true;
+}
+function showThread() { viewing = 'thread'; el('score').hidden = true; thread.hidden = false; document.querySelector('.composer').hidden = false; lastSig = ''; if (data) render(); }
+el('back').onclick = showThread;
 
 /* ---- open / close ---- */
 const panel = el('panel'), launch = el('launch');

@@ -79,6 +79,12 @@ label{display:block;color:var(--muted);margin-bottom:6px;font-size:13px;font-wei
 @media (max-width:480px){html,body{font-size:16px} h1{font-size:26px} h2{font-size:17px} .btn{font-size:13px;padding:10px 16px} .panel{padding:16px;box-shadow:4px 4px 0 #1B1B1B}}
 
 /* bare embed (inside the FCC chat card): no header, tight padding */
-body.bare .wrap{padding:10px 10px 20px}
+body.bare .wrap{padding:6px 6px 10px}
+body.bare .howto{margin:8px 0 0;padding:8px 12px;box-shadow:none;border-radius:12px}
+body.bare .howto summary{font-size:11px}
+body.bare .howto ul{font-size:14px;margin-left:16px}
+body.bare .panel.compact-over{margin:8px 0 0;padding:10px}
+body.bare .panel.compact-over h2{margin:0 0 4px;font-size:16px}
+body.bare .panel.compact-over p{margin:0}
 body.bare .panel{box-shadow:4px 4px 0 #1B1B1B;padding:14px}
 body.bare .banner{margin:8px 0}

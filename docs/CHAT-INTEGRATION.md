@@ -3,28 +3,25 @@
 How the five games plug into the Film Crew Collective website's conversations, using the same
 Gamepad button that already offers Overtime, with the FCC games listed above the Overtime entries.
 
-## Where things stand (25 Oct 2026, evening)
+## Where things stand (26 Oct 2026)
 
 | Piece | Status |
 |---|---|
-| Five games, FCC-styled, playable by pasted link | **Done.** Live at https://amossteven.github.io/FCCgames/ |
+| **Pop & Clap** (Connect Four, clapperboards vs popcorn) in a compact board-only layout for the chat | **Done.** The other four games are shelved in `games/` for later. |
 | Games as their own Railway service | **Config done** (`package.json`, `railway.json`, `serve.json`). Needs no variables; Railway supplies `PORT`. |
 | Embed mode: site hosts a game in a frame, names pre-filled, moves sent back, new state pushed in live | **Done** in `shared/fcc.js`. Reference parent page: `docs/embed-demo.html` |
 | Website side (menu entry, game page, message button, database) | **To build** in the FCC repo. Roughly a day of focused work. |
 
-## The experience we're building
+## The experience we're building (tested in the mock on 26 Oct)
 
-Members play **inside the conversation**. Nobody leaves the chat and no links are sent.
+Members play **inside the conversation**. No links are sent.
 
-1. In a conversation, Steve taps the Gamepad button beside the message box. The menu reads:
-   **Play a game** — 🃏 Telly Trumps · 📺 Channel Hopper · 🎞️ Clapperboard Connect · 🤫 Spoiler Alert · 💷 Bank It!
-   **Invite to Overtime** — Duel · Co-op (unchanged)
-2. Picking Telly Trumps puts a **game card** in the conversation: the game itself, live, with both names already filled in (Steve, and the member he's talking to). While a game is in progress the card is **pinned at the top of the thread**, above the messages, so it's always in view. Steve makes his first move right there.
-3. Jo gets a **turn nudge**: the conversation shows as unread with a thin pin line in the thread, *"🃏 Steve played · your move"*, the Messages badge in the nav lights up, and she gets the usual message email if she isn't on the site (the same once-per-unread-run rule as messages, so a long game doesn't become a long email thread). There is no link; she opens the conversation and the pinned card shows Steve's move with her turn ready to play.
-4. Both of them can leave the conversation open: the thread's existing poll notices when the other player has moved and the card updates in place (the game gets the new state pushed into it; no reload, no flicker).
-5. When the game ends the card shows the result with a Rematch button, then unpins; a result line stays in the history (*"🏆 Jo won Telly Trumps 12–0"*). Rematch starts a new card with the loser going first.
-
-The site knows who is who, so only the player whose turn it is can move, and the other player sees a "Waiting for Steve" screen on the same card.
+1. In a conversation, the Gamepad button's menu reads: **Play a game** — 🎬 Pop & Clap · 🏆 Scoreboard — then **Invite to Overtime** — Duel · Co-op (unchanged).
+2. Picking Pop & Clap puts a **game card** at the top of the thread, pinned while the game is on. It's a dropdown: an orange bar with the game name and a status pill ("Your move" / "Waiting for Jo") and a chevron. The starter sees it open and plays the first move; the other member sees it **closed and flashing** until they tap it, play, and it goes quiet again. Inside is just the board, a Director's Cut button and a "How to play" fold — no name form, no turn banner, no last-move panel.
+3. Each move marks the conversation unread for the other member (nav badge, the usual message email once per unread run). The per-move nudge messages are not drawn in the thread: the flashing card is the signal. Only "Steve started Pop & Clap" and the result line show.
+4. With the conversation open on both sides, the thread's poll pushes the new state into the open card: no reload.
+5. When the game ends the card stops being pinned and stays **in the thread, closed**, its bar showing the result ("You won" / "Jo won" / "Draw"). Opening it shows the final board and a Rematch button (loser starts).
+6. **Scoreboard** (from the Gamepad menu) is a view inside the chat window, like the Messages list: head-to-head total between the two members, per-game wins/draws/losses, recent results and a streak.
 
 ## How the game page talks to the site (already implemented)
 
@@ -105,9 +102,12 @@ Plus a `gameId String?` on `Message` for the start line, the turn-nudge lines an
 - **Pin lines**: messages with `gameId` render as a thin centred line (emoji + text, no bubble, no button) in `ChatThreadView` and the Messages pages; `messagePreview` uses the same text for the conversation list ("🃏 Steve played · your move").
 - The chat widget column is narrow; the games already lay out at phone width (tiles, grids and cards all tested at 375 px).
 
-### 6. Pinning and multiple games
-- One active game per conversation keeps the pinned area to a single card. If you'd rather allow several, pin only the most recent and list the others in a small tab strip on the card.
-- The pin is simply "render the active game above the list"; nothing to store.
+### 6. Card behaviour, pinning and the scoreboard
+- One active game per conversation; the menu entry reads "Resume" while one is on.
+- The live card is "render the active game above the list"; its open/closed state is per browser (sessionStorage), closed by default except for the starter's first move. Flashing = `nextPlayerId === me && closed`.
+- Finished games: render the result pin message as the folded card (the `ChatGame` row has the final state); load its frame only when opened.
+- Scoreboard: a `scoreboardFor(me, otherId)` query over finished `ChatGame` rows for the pair, shown as a view in the chat window (header "Scoreboard", back arrow returns to the thread). The mock's `/api/scoreboard` shows the shape: totals, per game, recent, streak.
+- Games ended early ("End game" in the card footer) get an "ended early" pin line and don't count on the scoreboard.
 
 ### 7. Test and ship
 Two accounts, two browsers, one conversation open in both: start each of the five games from the menu; play a full game of Clapperboard Connect (quickest) and watch the other browser's card update without a reload; check the nudge line, the unread badge and the email arrive for the other member; check the "Waiting for…" screen on the wrong seat; check the result line and Rematch; check it all in the chat widget as well as the Messages page.

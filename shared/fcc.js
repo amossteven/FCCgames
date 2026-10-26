@@ -59,7 +59,9 @@
   const PARENT_ORIGIN = Q.get('origin') || '*';
   const ME = EMBED && Q.has('me') ? Number(Q.get('me')) : null;
   const post = msg => { if (EMBED && window.parent !== window) { try { window.parent.postMessage(Object.assign({ v: 1 }, msg), PARENT_ORIGIN); } catch (e) { /* ignore */ } } };
-  FCC.embed = EMBED; FCC.post = post; FCC.me = ME;
+  /* compact = the game sits inside the FCC chat card: board only, no banner, no replay or waiting panels */
+  const COMPACT = EMBED && Q.get('bare') === '1';
+  FCC.embed = EMBED; FCC.post = post; FCC.me = ME; FCC.compact = COMPACT;
 
   /* ---------- sound ---------- */
   let ctx = null;
@@ -189,11 +191,11 @@
   function overPanel(cfg, state) {
     const w = state.over.winner;
     if (EMBED) {
-      return h('div', { class: 'panel accent center' },
-        h('h1', {}, w == null ? '🤝 DRAW!' : `🏆 ${state.p[w]} WINS!`),
-        state.over.reason ? h('p', {}, state.over.reason) : null,
-        h('div', { class: 'row', style: { marginTop: '12px', justifyContent: 'center' } },
-          h('button', { class: 'btn primary', onClick: () => { FCC.sfx.click(); post({ type: 'fcc:rematch', game: cfg.id }); } }, '🔁 REMATCH')));
+      return h('div', { class: 'panel accent center' + (COMPACT ? ' compact-over' : '') },
+        h(COMPACT ? 'h2' : 'h1', {}, w == null ? '🤝 DRAW!' : `🏆 ${state.p[w]} WINS!`),
+        state.over.reason ? h('p', { class: COMPACT ? 'small' : '' }, state.over.reason) : null,
+        h('div', { class: 'row', style: { marginTop: COMPACT ? '6px' : '12px', justifyContent: 'center' } },
+          h('button', { class: 'btn primary' + (COMPACT ? ' sm' : ''), onClick: () => { FCC.sfx.click(); post({ type: 'fcc:rematch', game: cfg.id }); } }, '🔁 REMATCH')));
     }
     const msg = message(cfg, state);
     const btn = h('button', { class: 'btn green', onClick: async () => { const ok = await FCC.copy(msg); btn.textContent = ok ? '✓ COPIED' : 'Copy failed'; } }, '📋 COPY RESULT');
@@ -217,7 +219,7 @@
   }
 
   function replayPanel(state) {
-    if (!state.last) return document.createDocumentFragment();
+    if (!state.last || COMPACT) return document.createDocumentFragment();
     return h('div', { class: 'replay' }, h('div', { class: 'who' }, `LAST MOVE · ${state.p[state.last.by]}`), h('div', {}, state.last.text));
   }
   FCC.replayPanel = replayPanel;
@@ -265,7 +267,7 @@
         root.append(h('div', { class: 'panel warn' }, h('h2', {}, 'Wrong game link'), h('p', {}, 'This link is for a different game. ', h('a', { href: '../index.html' }, 'Back to all games'))));
         return;
       }
-      root.append(turnBanner(state));
+      if (!COMPACT) root.append(turnBanner(state));
       if (state.over) {
         if (cfg.renderBoard) root.append(cfg.renderBoard(state));
         root.append(overPanel(cfg, state));
@@ -273,6 +275,7 @@
         return;
       }
       if (EMBED) {
+        if (COMPACT && (justMoved || (FCC.me !== null && state.n !== FCC.me))) { if (cfg.renderBoard) root.append(cfg.renderBoard(state)); root.append(howTo(cfg)); return; }
         if (justMoved) { root.append(sentPanel(state)); if (cfg.renderBoard) root.append(cfg.renderBoard(state)); return; }
         if (FCC.me !== null && state.n !== FCC.me) { root.append(waitingPanel(state)); root.append(replayPanel(state)); if (cfg.renderBoard) root.append(cfg.renderBoard(state)); root.append(howTo(cfg)); return; }
       } else {

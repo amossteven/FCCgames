@@ -22,15 +22,22 @@ Because the state is in the URL fragment (`#…`) nothing is ever sent to a serv
 
 ## The games
 
+**Now:** one game, built for the chat first.
+
+| Game | File | What it is |
+|---|---|---|
+| **Pop & Clap** 🎬🍿 | `games/pop-and-clap.html` | Connect Four at the pictures: clapperboards vs popcorn, plus one **Director's Cut** each (pull your own bottom piece and the column drops). Compact "board only" layout inside the chat card. |
+
+**On the shelf** (kept in `games/`, not offered in the launcher or the chat menu for now):
+
 | Game | File | Style | What it is |
 |---|---|---|---|
 | **Telly Trumps** 🃏 | `games/telly-trumps.html` | Card game | Top Trumps with 36 British films and TV shows. Six stats (Vintage, Cult Status, Laughs, Tears, Britishness, Quotability). Win all their cards or have the most after 40 rounds. |
 | **Channel Hopper** 📺 | `games/channel-hopper.html` | Strategy / 8-bit | Battleships on a TV listings grid (6 channels × 8 half-hour slots). Hide five programmes, fire two "channel hops" a turn, take theirs off air. |
-| **Clapperboard Connect** 🎞️ | `games/clapperboard-connect.html` | Arcade | Connect Four, reels vs popcorn, plus one **Director's Cut** each: pull your own bottom disc and the column shifts down. Can win or backfire. |
 | **Spoiler Alert** 🤫 | `games/spoiler-alert.html` | Word game | Wordle duel. Each player hides a one-word British title (5–11 letters); first to crack the other's wins. You can see how close they're getting. |
 | **Bank It!** 💷 | `games/bank-it.html` | Quiz | Push-your-luck trivia. Five questions a turn worth £20/£50/£100/£200/£500; bank the chain or risk it. 90-question UK film & TV bank, no repeats. First to £1,000. |
 
-`index.html` is a launcher listing all five with the how-to.
+`index.html` is the launcher.
 
 ## Design
 
