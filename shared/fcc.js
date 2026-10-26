@@ -302,8 +302,12 @@
         if (!state.over && state.n === FCC.me) FCC.sfx.good();
       });
       post({ type: 'fcc:ready', game: cfg.id, id: state ? state.id : null });
-      const sendHeight = () => post({ type: 'fcc:height', height: document.documentElement.scrollHeight });
-      if (window.ResizeObserver) new ResizeObserver(sendHeight).observe(document.body); else setInterval(sendHeight, 1000);
+      // Content height, not viewport height, so the card shrinks when a button or panel goes away.
+      let lastH = 0;
+      const sendHeight = () => { const hgt = Math.ceil(document.body.getBoundingClientRect().height); if (hgt !== lastH) { lastH = hgt; post({ type: 'fcc:height', height: hgt }); } };
+      if (window.ResizeObserver) { const ro = new ResizeObserver(sendHeight); ro.observe(document.body); ro.observe(root); } else setInterval(sendHeight, 500);
+      document.addEventListener('toggle', sendHeight, true);
+      window.addEventListener('load', sendHeight);
     }
   };
 

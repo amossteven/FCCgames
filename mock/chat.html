@@ -319,7 +319,7 @@ window.addEventListener('message', async e => {
   const sender = [...document.querySelectorAll('.gamecard iframe')].find(f => f.contentWindow === e.source);
   if (!sender) return;
   const frame = sender;
-  if (m.type === 'fcc:height') { frame.style.height = Math.min(Math.max(160, m.height), 1400) + 'px'; return; }
+  if (m.type === 'fcc:height') { frame.style.height = Math.min(Math.max(120, m.height + 2), 1400) + 'px'; return; }
   if (frame.id !== 'gframe') { if (m.type === 'fcc:rematch') { const r = await api('/api/game/rematch', {}); if (!r.ok) showErr(r.error); poll(); } return; }
   if (m.type === 'fcc:ready') { frameReady = true; return; }
   if (m.type === 'fcc:move') {
