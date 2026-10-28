@@ -3,14 +3,16 @@
 How the five games plug into the Film Crew Collective website's conversations, using the same
 Gamepad button that already offers Overtime, with the FCC games listed above the Overtime entries.
 
-## Where things stand (26 Oct 2026)
+## Where things stand (28 Oct 2026)
 
 | Piece | Status |
 |---|---|
 | **Pop & Clap** (Connect Four, clapperboards vs popcorn) in a compact board-only layout for the chat | **Done.** The other four games are shelved in `games/` for later. |
 | Games as their own Railway service | **Config done** (`package.json`, `railway.json`, `serve.json`). Needs no variables; Railway supplies `PORT`. |
 | Embed mode: site hosts a game in a frame, names pre-filled, moves sent back, new state pushed in live | **Done** in `shared/fcc.js`. Reference parent page: `docs/embed-demo.html` |
-| Website side (menu entry, game page, message button, database) | **To build** in the FCC repo. Roughly a day of focused work. |
+| Website side (menu, folding card, result cards, Scoreboard view and pop-up, live updates) | **Built and tested** by the FCC design session in the FCC working tree (not committed or deployed; Steve decides). |
+| `frame-ancestors` header on the games service (`serve.json`) | **Done** for filmcrewcollective.com / .co.uk (www and apex) and localhost. Only the Railway service sends headers; GitHub Pages can't. |
+| Deploy the games service and set `FCC_GAMES_URL` on the site's Railway service **before** the site is built (its CSP `frame-src` is fixed at build time) | **Steve** |
 
 ## The experience we're building (tested in the mock on 26 Oct)
 
@@ -57,7 +59,7 @@ Message the parent posts **to** the frame (`frame.contentWindow.postMessage(msg,
 |---|---|---|
 | `fcc:load` | the other player has moved (the thread poll saw a newer `turn`) | `v: 1`, `state` (the saved state), `me` (the viewer's seat). The game re-renders in place and chimes if it's now the viewer's move |
 
-The state is opaque to the site. The only thing the site reads from it is `state.n` (the seat whose turn it is) to verify a move came from the right member.
+The state is opaque to the site. What the site actually does with a move (as built): checks `state` is an object under 8 KB with `state.g === "popclap"`, saves `state` and `over`, and works out the next player itself because Pop & Clap alternates, so the game's `next` field is ignored. A refused move is answered by pushing the saved state back into the frame with `fcc:load`, so the board can't drift. The iframe is sandboxed (`allow-scripts allow-same-origin`, `allow="autoplay"`): localStorage works, top-level navigation and popups from the game are blocked. **The protocol below is frozen**: `fcc:ready`, `fcc:height {height}`, `fcc:move {state, over}`, `fcc:rematch` out; `fcc:load {state, me}` in. Any change must be agreed with the site first.
 
 ## Website work, in order
 

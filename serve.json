@@ -2,7 +2,13 @@
   "cleanUrls": false,
   "directoryListing": false,
   "headers": [
-    { "source": "**/*.html", "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }] },
+    {
+      "source": "**/*.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self' https://filmcrewcollective.com https://www.filmcrewcollective.com https://filmcrewcollective.co.uk https://www.filmcrewcollective.co.uk http://localhost:* http://127.0.0.1:*" }
+      ]
+    },
     { "source": "shared/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }] }
   ]
 }
