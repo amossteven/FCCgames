@@ -126,6 +126,29 @@ svg{display:block}
 .menu .sub{display:block;font-size:12px;color:rgba(20,18,15,.6)}
 .menu hr{border:0;border-top:2px solid rgba(20,18,15,.1);margin:6px 4px}
 
+/* Clappy popup: the game is solo and portrait, so it opens over the page rather than in the thread.
+   Phones: full screen. Tablet/desktop: a 9:16 modal with the site's card chrome. */
+.cpop{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(20,18,15,.72)}
+.cpop .cbox{position:relative;display:flex;flex-direction:column;height:min(92dvh,760px);width:calc(min(92dvh,760px) * 9 / 16 + 4px);max-width:100vw;border:2px solid var(--ink);border-radius:16px;overflow:hidden;background:#0b0a14;box-shadow:5px 5px 0 0 var(--ink)}
+.cpop .cbar{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;background:var(--ink);color:var(--cream);font-family:Archivo,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.cpop .cbar .hint{flex:1;font-family:Inter,sans-serif;font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;color:rgba(237,232,226,.7)}
+.cpop .cbar .icon-btn{color:var(--cream)}
+.cpop iframe{flex:1;width:100%;min-height:0;border:0;background:#0b0a14}
+.cpop .ctoast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--orange);color:var(--ink);border:2px solid var(--ink);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:3px 3px 0 0 var(--ink)}
+@media (max-width:767px){.cpop{background:#0b0a14}.cpop .cbox{width:100vw;height:100dvh;max-height:100dvh;border:0;border-radius:0;box-shadow:none}.cpop .cbar{display:none}}
+/* Clappy block on the scoreboard */
+.score .clappy{margin-top:18px;border:2px solid var(--ink);border-radius:16px;overflow:hidden;background:#fff}
+.score .clappy .ch{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--ink);color:var(--cream);font-family:Archivo,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.score .clappy .ch span{flex:1}
+.score .clappy .ch button{border-radius:999px;border:2px solid var(--cream);background:var(--orange);color:var(--ink);font-size:11px;font-weight:700;padding:3px 10px;cursor:pointer}
+.score .clappy .row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:2px solid rgba(20,18,15,.08);font-size:13px}
+.score .clappy .row:first-of-type{border-top:0}
+.score .clappy .row .n{width:18px;font-weight:800;color:var(--orange-dark)}
+.score .clappy .row .who{flex:1;font-weight:700}
+.score .clappy .row .rk{font-size:11px;color:rgba(20,18,15,.6)}
+.score .clappy .row b{font-size:16px}
+.score .clappy .post{padding:8px 12px;border-top:2px solid rgba(20,18,15,.08);font-size:12px;color:rgba(20,18,15,.8);background:var(--cream-dark,#dfdbd8)}
+.score .clappy .post strong{color:var(--ink)}
 /* launcher */
 .launch{position:relative;display:flex;width:56px;height:56px;align-items:center;justify-content:center;border-radius:999px;border:2px solid var(--ink);background:var(--ink);color:var(--cream);transition:background .15s,color .15s}
 .launch:hover{background:var(--orange);color:var(--ink)}
@@ -316,6 +339,16 @@ setInterval(poll, 2000); document.addEventListener('visibilitychange', poll); po
 window.addEventListener('message', async e => {
   if (e.origin !== GAMES_ORIGIN || !e.data || e.data.v !== 1) return;
   const m = e.data;
+  if (m.game === 'clappy') {   // solo game in the popup: scores, not moves
+    if (!cpop || e.source !== cpop.querySelector('iframe').contentWindow) return;
+    if (m.type === 'fcc:close') closeClappy();
+    else if (m.type === 'fcc:score') {
+      const r = await api('/api/clappy/score', { score: m.score, trophies: m.trophies, rank: m.rank });
+      if (r.ok && r.newBest) clappyToast(r.isRecord ? '🏆 New FCC high score! billy is posting it on The Stage' : '⭐ New personal best · on the Clappy Scoreboard');
+      poll();
+    }
+    return;
+  }
   const sender = [...document.querySelectorAll('.gamecard iframe')].find(f => f.contentWindow === e.source);
   if (!sender) return;
   const frame = sender;
@@ -351,16 +384,18 @@ function showErr(t) { const e = el('err'); e.textContent = t; e.hidden = false; 
 const gpbtn = el('gpbtn'), menu = el('menu');
 gpbtn.onclick = () => { const o = menu.hidden; menu.hidden = !o; gpbtn.setAttribute('aria-expanded', String(o)); if (o) buildMenu(); };
 document.addEventListener('pointerdown', e => { if (!menu.hidden && !e.target.closest('.gp')) { menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false'); } });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false'); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false'); closeClappy(); } });
 function buildMenu() {
   const active = data && data.game && !data.game.over;
   const rows = Object.entries(data.games).map(([id, g]) => `<button type="button" class="item" data-game="${id}"><span class="em">${g.emoji}</span><span><span class="name">${esc(g.title)}${active && data.game.game === id ? ' · Resume' : ''}</span><span class="sub">${esc(g.blurb)}</span></span></button>`).join('');
   menu.innerHTML = `<p class="lbl">Play a game</p>${rows}
+    <button type="button" class="item" id="clappybtn"><span class="em">🕹️</span><span><span class="name">Clappy</span><span class="sub">Solo arcade · beat your best${data.clappy && data.clappy.best[ME] ? ' of ' + data.clappy.best[ME].score : ''}</span></span></button>
     <button type="button" class="item" id="scorebtn"><span class="em">🏆</span><span><span class="name">Scoreboard</span><span class="sub">You vs ${esc(data.players[1 - ME])}</span></span></button>
     <hr><p class="lbl">Invite to Overtime</p>
     <button type="button" class="item" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></svg><span><span class="name">Duel</span><span class="sub">Head to head</span></span></button>
     <button type="button" class="item" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span><span class="name">Co-op</span><span class="sub">Play together</span></span></button>`;
   menu.querySelector('#scorebtn').onclick = () => { menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false'); showScoreboard(); };
+  menu.querySelector('#clappybtn').onclick = () => { menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false'); openClappy(); };
   menu.querySelectorAll('[data-game]').forEach(b => b.onclick = async () => {
     menu.hidden = true; gpbtn.setAttribute('aria-expanded', 'false');
     if (active && data.game.game !== b.dataset.game && !confirm(`You're mid-game in ${data.game.title}. End it and start ${data.games[b.dataset.game].title}?`)) return;
@@ -389,11 +424,41 @@ async function showScoreboard() {
   html += '<h3>Recent results</h3>';
   html += sb.recent.length ? '<ul>' + sb.recent.map(r => `<li><span>${r.emoji}</span><span><strong>${esc(r.title)}</strong><br><span class="d">${new Date(r.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · ${esc(r.reason)}</span></span><span class="r ${r.result}">${r.result}</span></li>`).join('') + '</ul>'
        : `<div class="empty">No finished games yet. Start one from the 🎮 menu.</div>`;
+  // Clappy: solo high scores between the two of you, plus billy's latest Stage post. The Play button opens the popup.
+  const cb = (sb.clappy && sb.clappy.best) || [null, null];
+  const ranked = [0, 1].filter(i => cb[i]).sort((a, b) => cb[b].score - cb[a].score);
+  html += `<div class="clappy"><div class="ch"><span>🕹️ Clappy high scores</span><button type="button" id="playclappy">Play Clappy</button></div>`;
+  html += ranked.length ? ranked.map((i, n) => `<div class="row"><span class="n">${n + 1}</span><span class="who">${esc(sb.players[i])}${i === sb.me ? ' <span class="rk">(you)</span>' : ''}<br><span class="rk">${esc(cb[i].rank)} · ${cb[i].trophies} trophies · ${new Date(cb[i].at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></span><b>${cb[i].score}</b></div>`).join('')
+       : '<div class="row"><span class="rk">No runs yet. Tap Play Clappy and hop.</span></div>';
+  if (sb.clappy && sb.clappy.posts && sb.clappy.posts[0]) html += `<div class="post"><strong>billy</strong> on The Stage · ${new Date(sb.clappy.posts[0].at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}<br>${esc(sb.clappy.posts[0].text)} <u>${esc(sb.clappy.posts[0].link)}</u></div>`;
+  html += '</div>';
   el('score').innerHTML = html;
+  el('score').querySelector('#playclappy').onclick = openClappy;
   el('score').hidden = false; thread.hidden = true; document.querySelector('.composer').hidden = true;
 }
 function showThread() { viewing = 'thread'; el('score').hidden = true; thread.hidden = false; document.querySelector('.composer').hidden = false; lastSig = ''; if (data) render(); }
 el('back').onclick = showThread;
+
+/* ---- Clappy popup (solo arcade game; a page-level modal, not part of the thread) ---- */
+let cpop = null;
+function openClappy() {
+  closeClappy();
+  const mine = data && data.clappy && data.clappy.best[ME];
+  const q = new URLSearchParams({ embed: '1', origin: location.origin, best: String(mine ? mine.score : 0) });
+  cpop = document.createElement('div'); cpop.className = 'cpop';
+  const touch = matchMedia('(pointer: coarse)').matches;
+  cpop.innerHTML = `<div class="cbox"><div class="cbar"><span>🕹️ Clappy</span><span class="hint">${touch ? 'Tap to hop' : 'Space to hop · Esc to close'}</span>
+      <button type="button" class="icon-btn cclose" aria-label="Close Clappy"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+    <iframe title="Clappy" allow="autoplay" sandbox="allow-scripts allow-same-origin" src="${GAMES_ORIGIN}/games/clappy.html?${q}"></iframe></div>`;
+  cpop.querySelector('.cclose').onclick = closeClappy;
+  cpop.addEventListener('pointerdown', e => { if (e.target === cpop) closeClappy(); });
+  document.body.appendChild(cpop);
+  const f = cpop.querySelector('iframe'); f.addEventListener('load', () => f.focus());
+}
+function closeClappy() { if (cpop) { cpop.remove(); cpop = null; } }
+function clappyToast(text) { if (!cpop) return; const t = document.createElement('div'); t.className = 'ctoast'; t.textContent = text; cpop.querySelector('.cbox').appendChild(t); setTimeout(() => t.remove(), 3500); }
+// Space hops even when the page, not the frame, has focus.
+document.addEventListener('keydown', e => { if (cpop && (e.code === 'Space' || e.code === 'ArrowUp') && document.activeElement !== cpop.querySelector('iframe')) { e.preventDefault(); if (!e.repeat) cpop.querySelector('iframe').contentWindow.postMessage({ v: 1, type: 'fcc:press' }, GAMES_ORIGIN); } });
 
 /* ---- open / close ---- */
 const panel = el('panel'), launch = el('launch');

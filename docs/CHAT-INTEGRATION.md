@@ -1,5 +1,7 @@
 # Putting FCC Games inside the members' chat
 
+Two kinds of game: **Pop & Clap** is turn-based and played inside the conversation; **Clappy** is a solo arcade game that opens in a popup and feeds a high-score board (second half of this document).
+
 How the five games plug into the Film Crew Collective website's conversations, using the same
 Gamepad button that already offers Overtime, with the FCC games listed above the Overtime entries.
 
@@ -12,7 +14,8 @@ Gamepad button that already offers Overtime, with the FCC games listed above the
 | Embed mode: site hosts a game in a frame, names pre-filled, moves sent back, new state pushed in live | **Done** in `shared/fcc.js`. Reference parent page: `docs/embed-demo.html` |
 | Website side (menu, folding card, result cards, Scoreboard view and pop-up, live updates) | **Built and tested** by the FCC design session in the FCC working tree (not committed or deployed; Steve decides). |
 | `frame-ancestors` header on the games service (`serve.json`) | **Done** for filmcrewcollective.com / .co.uk (www and apex) and localhost. Only the Railway service sends headers; GitHub Pages can't. |
-| Deploy the games service and set `FCC_GAMES_URL` on the site's Railway service **before** the site is built (its CSP `frame-src` is fixed at build time) | **Steve** |
+| Deploy the games service and set `FCC_GAMES_URL` on the site's Railway service **before** the site is built (its CSP `frame-src` is fixed at build time) | **Done 28 Oct.** Site side live at www.filmcrewcollective.co.uk; games at https://fccgames.up.railway.app (deployed with `railway up`; the GitHub trigger on the Railway service still needs reconnecting). |
+| **Clappy** (solo 8-bit arcade game, popup not card) | **Game done** in `games/clappy.html` with the score protocol below, mocked in `mock/chat.html`. Website side: see [Clappy](#clappy-solo-arcade-game-in-a-popup). |
 
 ## The experience we're building (tested in the mock on 26 Oct)
 
@@ -123,3 +126,80 @@ Two accounts, two browsers, one conversation open in both: start each of the fiv
 - `/members/games` lobby: games where it's your move, recent results, a leaderboard per game.
 - "Your move" count on the Gamepad icon or the Messages nav item.
 - More games on the same engine (each is a single HTML file; the site needs only a catalogue entry).
+
+
+---
+
+# Clappy: solo arcade game in a popup
+
+Clappy is Steve's 8-bit "film set flyer": tap or press Space to hop the clapperboard past boom poles, lamps, flight
+cases and camera cranes, grab trophies (every tenth one gives a power-up), and beat your best. It's a one-player,
+portrait, 9:16 canvas game, so it does **not** play inside the thread. It opens in a popup over the page and
+sends its score to the site when a run ends. File: `games/clappy.html` (served at `${FCC_GAMES_URL}/games/clappy.html`).
+
+## The experience
+
+1. **From the chat.** The Gamepad menu reads **Play a game** — 🎬 Pop & Clap · 🕹️ Clappy · 🏆 Scoreboard — then the Overtime entries. Clappy opens the popup (a page-level portal, not inside the 384 px widget).
+2. **The popup.** Phones (under 768 px): full screen, 100vw × 100dvh, portrait, no chrome; the game's own **EXIT** button (top-left, only shown in embed mode) closes it. Tablet and desktop: a centred 9:16 modal, height `min(92dvh, 760px)`, width = height × 9/16, 2 px ink border, rounded-2xl, 5 px hard shadow, ink header bar "🕹️ Clappy · Space to hop · Esc to close" with a ✕, dimmed backdrop; click outside or Esc closes. The mock (`mock/chat.html`, class `.cpop`) is the reference.
+3. **Keyboard.** Call `iframe.focus()` once the frame loads. While the popup is open, catch `Space`/`ArrowUp` on the document when the frame doesn't have focus, `preventDefault()` (stops the page scrolling) and post `fcc:press` into the frame, ignoring key repeats.
+4. **Scores.** At the end of every run the frame posts `fcc:score`. Signed-in members (Basic, Pro and Ultimate alike) get it saved: a higher score than their saved best updates their row on the **Clappy Scoreboard**. The popup shows a small toast: "⭐ New personal best · on the Clappy Scoreboard" or, for a new all-time record, "🏆 New FCC high score! billy is posting it on The Stage".
+5. **The Stage.** When the all-time record falls, the site creates a Stage post **by billy** with a comment, for example: *"🎬 NEW CLAPPY HIGH SCORE! Steve just flew 42 takes on the set (rank: DIRECTOR). Think you can beat it? ▶ Play Clappy"*. The link opens the Clappy Scoreboard, which has a Play button that opens the popup.
+6. **Clappy Scoreboard.** A page (suggest `/games/clappy`) listing members by best score: rank number, avatar, name, score, in-game rank (EXTRA … MOGUL), trophies, date; the viewer's row highlighted; top 50; a big **Play Clappy** button that opens the popup. Also reachable from billy's posts and (optionally) the chat Scoreboard view, which could show "You vs them" Clappy bests the way the mock does.
+7. **Guests.** Anyone not signed in can open `/games/clappy` and play; their `fcc:score` isn't saved. After their first finished run the page shows a card over the frame: "Nice run! Sign up to get on the Clappy Scoreboard" with Sign up / Sign in buttons (and "Keep playing"). Their best is kept in the frame's localStorage, so the game still shows BEST for them.
+
+## How the game page talks to the site
+
+Frame URL:
+```
+${FCC_GAMES_URL}/games/clappy.html?embed=1&origin=<site origin>&best=<member's saved best, or 0>
+```
+`sandbox="allow-scripts allow-same-origin" allow="autoplay"` as for Pop & Clap. `best` seeds the game's BEST line and its NEW BEST logic from the server, so a member's best follows them between devices.
+
+Messages the frame posts to the parent (`event.data.v === 1 && event.data.game === "clappy"`; check `event.origin === FCC_GAMES_URL`):
+
+| `type` | When | Fields |
+|---|---|---|
+| `fcc:ready` | page loaded | `game` |
+| `fcc:score` | a run ended (the clapper hit something or the floor) | `score` (int, can be 0), `trophies` (int), `rank` (string, e.g. `GAFFER`), `best` and `newBest` (the game's own view from localStorage + the `best` param; the site decides for itself from its saved row) |
+| `fcc:close` | EXIT pressed inside the game | `game` — close the popup |
+
+Messages the parent posts to the frame (`frame.contentWindow.postMessage(msg, FCC_GAMES_URL)`):
+
+| `type` | When | Fields |
+|---|---|---|
+| `fcc:press` | Space/ArrowUp pressed on the page while the popup is open | `v: 1` — same as a tap |
+| `fcc:best` | the saved best changed (e.g. the viewer signed in mid-session) | `v: 1`, `best` (int) |
+
+The frame never navigates or opens windows; it only draws and posts. Scores are self-reported by a canvas game, so treat them like any client claim: validate (integer, 0–9999), rate-limit (one save per few seconds per member), and keep the leaderboard light-hearted. The protocol above is frozen like Pop & Clap's; changes are agreed with the site first.
+
+## Website work, in order
+
+1. **Prisma.** One row per member is the scoreboard:
+   ```prisma
+   model ClappyScore {
+     userId    String   @id
+     best      Int
+     trophies  Int      @default(0)
+     rank      String   @default("EXTRA")
+     runs      Int      @default(0)
+     updatedAt DateTime @updatedAt
+     createdAt DateTime @default(now())
+     @@index([best])
+   }
+   ```
+   (Optional `ClappyRun` history if you want per-run stats later.)
+2. **Server action** `submitClappyScore({ score, trophies, rank })` in `src/app/chat/actions.ts` or a new `src/lib/clappy.ts`: requires a session (guests get `{ ok: true, saved: false }`); validates; bumps `runs`; if `score > best` updates the row and returns `{ newBest: true, isRecord }` where `isRecord` means it beat the highest `best` of everyone else. If `isRecord`, create the Stage post (next point).
+3. **billy's Stage post.** Needs a user to post as. If "billy" is an existing account (the FCC mascot/admin), post with a server-side helper as that user; otherwise seed a system user `billy` (display name "billy", FCC avatar, not listed in the Directory). Post body as in the experience section, with the link to `/games/clappy`. Post **only** when the all-time record falls (recommended, keeps The Stage from filling with 3-point runs); alternatives in the decisions below.
+4. **Clappy Scoreboard page** `/games/clappy`: public (guests see the board and can play; the sign-up invite appears after a run), lists `ClappyScore` ordered by `best desc` with member names/avatars, Play button that opens the popup. This page is also the full-screen home for Clappy on phones.
+5. **Popup component** `ClappyPopup.tsx` (client, portal to `document.body`): sizing/behaviour as above; builds the frame URL with the viewer's saved best; handles `fcc:score`/`fcc:close`; forwards Space; focuses the frame; toasts; guest invite card.
+6. **Chat menu.** Add the 🕹️ Clappy entry under Play a game (all plans). It opens the popup instead of creating a `ChatGame`.
+7. **Test.** Desktop: open from the chat, Space hops, Esc closes, a run posts a score and the scoreboard row updates; a bigger run makes billy post once. Phone: full screen, EXIT closes, scores save. Guest: play on `/games/clappy`, see the invite, nothing saved.
+
+## Decisions for Steve
+- **When does billy post?** Recommended: only when the all-time record falls. Alternatives: when someone enters the top 10, or on every personal best (noisy).
+- **Who is billy?** An existing account to post as, or a seeded system user?
+- **Where does the Clappy Scoreboard live?** A page at `/games/clappy` (recommended, linkable from billy's posts and open to guests), or a section of The Stage.
+
+## Later
+- A "challenge" line in the chat: post your Clappy score to the member you're talking to ("Steve scored 42 in Clappy · beat it?") with a tap-to-play link.
+- Weekly reset board alongside the all-time one.

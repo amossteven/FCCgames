@@ -14,7 +14,7 @@ const GAMES = {
   popclap: { file: 'pop-and-clap', title: 'Pop & Clap', emoji: '🎬', blurb: 'Connect four: clapperboards vs popcorn' },
 };
 
-const fresh = () => ({ players: PLAYERS, messages: [], game: null, history: [], readAt: [0, 0] });
+const fresh = () => ({ players: PLAYERS, messages: [], game: null, history: [], readAt: [0, 0], clappy: { best: [null, null], posts: [] } });
 let db = fresh();
 try { db = Object.assign(fresh(), JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))); } catch (e) { /* first run */ }
 const save = () => fs.writeFileSync(STATE_FILE, JSON.stringify(db, null, 2));
@@ -28,7 +28,7 @@ const api = {
     const me = Number(q.as ?? 0);
     const other = 1 - me;
     const unread = db.messages.filter(m => m.from === other && new Date(m.sentAt).getTime() > (db.readAt[me] || 0)).length;
-    return { players: db.players, me, messages: db.messages.slice(-60), game: db.game, history: db.history.slice(-30), unread, games: GAMES };
+    return { players: db.players, me, messages: db.messages.slice(-60), game: db.game, history: db.history.slice(-30), unread, games: GAMES, clappy: db.clappy };
   },
   'GET /api/scoreboard': (q) => {
     const me = Number(q.as ?? 0);
@@ -44,7 +44,7 @@ const api = {
     let streak = 0, kind = null;
     for (const r of recent) { if (r.result === 'draw') break; if (kind && r.result !== kind) break; kind = r.result; streak++; }
     const totals = Object.values(per).reduce((a, p) => ({ me: a.me + p.me, them: a.them + p.them, draws: a.draws + p.draws, played: a.played + p.played }), { me: 0, them: 0, draws: 0, played: 0 });
-    return { players: db.players, me, per: Object.values(per), totals, recent, streak: { kind, count: streak }, abandoned: db.history.filter(g => !g.over).length };
+    return { players: db.players, me, per: Object.values(per), totals, recent, streak: { kind, count: streak }, abandoned: db.history.filter(g => !g.over).length, clappy: db.clappy };
   },
   'POST /api/read': (q, b) => { db.readAt[Number(b.as)] = Date.now(); save(); return { ok: true }; },
   'POST /api/message': (q, b) => {
@@ -92,6 +92,23 @@ const api = {
     return { ok: true, game: db.game };
   },
   'POST /api/game/abandon': (q, b) => { if (db.game && !db.game.over) { db.history.push({ ...db.game, abandonedAt: now() }); pin(Number(b.as), `${db.game.emoji} ${db.players[Number(b.as)]} ended ${db.game.title} early`, db.game.id); } db.game = null; save(); return { ok: true }; },
+  // Clappy is solo: the site keeps one best per member (the Clappy Scoreboard). A new personal best updates the row;
+  // a new all-time high score also gets a post on The Stage from billy. The mock keeps both in db.clappy.
+  'POST /api/clappy/score': (q, b) => {
+    const me = Number(b.as); const score = Number(b.score), trophies = Number(b.trophies) || 0, rank = String(b.rank || '').slice(0, 12);
+    if (!Number.isInteger(score) || score < 0 || score > 9999) return { ok: false, error: 'Bad score' };
+    const prev = db.clappy.best[me];
+    const newBest = !prev || score > prev.score;
+    const record = Math.max(0, ...db.clappy.best.filter(Boolean).map(x => x.score));
+    const isRecord = score > record;
+    if (newBest && score > 0) {
+      db.clappy.best[me] = { score, trophies, rank, at: now() };
+      if (isRecord) db.clappy.posts.unshift({ at: now(), by: 'billy', text: `🎬 NEW CLAPPY HIGH SCORE! ${db.players[me]} just flew ${score} take${score === 1 ? '' : 's'} on the set (rank: ${rank}). Think you can beat it?`, link: 'Play Clappy' });
+      db.clappy.posts = db.clappy.posts.slice(0, 10);
+      save();
+    }
+    return { ok: true, newBest: newBest && score > 0, isRecord: isRecord && score > 0, best: db.clappy.best[me] };
+  },
   'POST /api/reset': () => { db = fresh(); save(); return { ok: true }; },
 };
 

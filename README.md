@@ -27,6 +27,7 @@ Because the state is in the URL fragment (`#…`) nothing is ever sent to a serv
 | Game | File | What it is |
 |---|---|---|
 | **Pop & Clap** 🎬🍿 | `games/pop-and-clap.html` | Connect Four at the pictures: clapperboards vs popcorn, plus one **Director's Cut** each (pull your own bottom piece and the column drops). Compact "board only" layout inside the chat card. |
+| **Clappy** 🕹️🏆 | `games/clappy.html` | Solo 8-bit film set flyer: tap or press Space to hop the clapperboard past boom poles, lamps and camera cranes, grab trophies for power-ups, beat your best. Opens in a popup on the site and posts its score (`fcc:score`) for the Clappy Scoreboard and billy's Stage posts. |
 
 **On the shelf** (kept in `games/`, not offered in the launcher or the chat menu for now):
 
