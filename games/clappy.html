@@ -827,9 +827,10 @@ function drawUI() {
   }
   if (state === 'play' || state === 'dead') {
     txt(String(score), 72, 10, 16, C.paper, 'center');
-    drawTrophy(2, 3);
-    txt('x' + trophies, 17, 10, 8, C.paper, 'left');
-    for (let i = 0; i < 10; i++) R(3 + i * 3, 27, 2, 2, i < trophies % 10 ? '#ffd23f' : '#3a3950');
+    const hy = EMBED ? 11 : 0;   // in the site's popup the EXIT button sits top-left, so the trophy count moves below it
+    drawTrophy(2, 3 + hy);
+    txt('x' + trophies, 17, 10 + hy, 8, C.paper, 'left');
+    for (let i = 0; i < 10; i++) R(3 + i * 3, 27 + hy, 2, 2, i < trophies % 10 ? '#ffd23f' : '#3a3950');
     drawPuHud();
   }
   for (const q of pops) {
