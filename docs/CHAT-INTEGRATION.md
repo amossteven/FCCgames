@@ -195,10 +195,11 @@ The frame never navigates or opens windows; it only draws and posts. Scores are 
 6. **Chat menu.** Add the 🕹️ Clappy entry under Play a game (all plans). It opens the popup instead of creating a `ChatGame`.
 7. **Test.** Desktop: open from the chat, Space hops, Esc closes, a run posts a score and the scoreboard row updates; a bigger run makes billy post once. Phone: full screen, EXIT closes, scores save. Guest: play on `/games/clappy`, see the invite, nothing saved.
 
-## Decisions for Steve
-- **When does billy post?** Recommended: only when the all-time record falls. Alternatives: when someone enters the top 10, or on every personal best (noisy).
-- **Who is billy?** An existing account to post as, or a seeded system user?
-- **Where does the Clappy Scoreboard live?** A page at `/games/clappy` (recommended, linkable from billy's posts and open to guests), or a section of The Stage.
+## Decisions (made by Steve, 29 Oct 2026)
+- **billy posts only when the all-time record falls.** billy already exists on the site as a hidden stage-manager account; his record post follows his "approval first / live" setting.
+- **The Clappy Scoreboard is a page at `/games/clappy`.**
+- **Guests** can play and see scores and ranks; names and photos show only to signed-in members.
+- The site side is being built by the FCC design session against the protocol above, unchanged.
 
 ## Later
 - A "challenge" line in the chat: post your Clappy score to the member you're talking to ("Steve scored 42 in Clappy · beat it?") with a tap-to-play link.
