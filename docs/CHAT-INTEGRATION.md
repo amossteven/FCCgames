@@ -15,7 +15,7 @@ Gamepad button that already offers Overtime, with the FCC games listed above the
 | Website side (menu, folding card, result cards, Scoreboard view and pop-up, live updates) | **Built and tested** by the FCC design session in the FCC working tree (not committed or deployed; Steve decides). |
 | `frame-ancestors` header on the games service (`serve.json`) | **Done** for filmcrewcollective.com / .co.uk (www and apex) and localhost. Only the Railway service sends headers; GitHub Pages can't. |
 | Deploy the games service and set `FCC_GAMES_URL` on the site's Railway service **before** the site is built (its CSP `frame-src` is fixed at build time) | **Done 28 Oct.** Site side live at www.filmcrewcollective.co.uk; games at https://fccgames.up.railway.app (deployed with `railway up`; the GitHub trigger on the Railway service still needs reconnecting). |
-| **Clappy** (solo 8-bit arcade game, popup not card) | **Game live** at the games service (`games/clappy.html`). **Website side built and tested** by the FCC design session (menu entry, popup, `/games/clappy` scoreboard, billy's record posts), not committed or deployed; Steve decides. See [Clappy](#clappy-solo-arcade-game-in-a-popup). |
+| **Clappy** (solo 8-bit arcade game, popup not card) | **Game live** at the games service (`games/clappy.html`). **Website side live** since 29 Oct 2026 (site commit 6fd12c1): menu entry, popup, public scoreboard at https://www.filmcrewcollective.co.uk/games/clappy, billy's record posts. See [Clappy](#clappy-solo-arcade-game-in-a-popup). |
 
 ## The experience we're building (tested in the mock on 26 Oct)
 
