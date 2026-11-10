@@ -33,6 +33,8 @@ body.bare .cwrap{border-width:4px;padding:3px;box-shadow:none;border-radius:12px
 .pd{fill:var(--pd)}
 .pds{fill:none;stroke:var(--pd);stroke-width:1.3;stroke-linecap:round}
 .pg{fill:#F2B544;stroke:#1B1B1B;stroke-width:.8;stroke-linejoin:round}
+.cupt{fill:none;stroke:var(--pf);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.rail{fill:none;stroke:#1B1B1B;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .leg-o{fill:none;stroke:#1B1B1B;stroke-width:4.4}
 .leg-i{fill:none;stroke:var(--pf);stroke-width:1.6}
 /* Classic set: ordinary chess symbols, for anyone who prefers them */
@@ -68,35 +70,36 @@ body.bare .panel.turn,body.bare .panel.boardonly{padding:0;border:0;box-shadow:n
 <!-- The crew. Every piece stands on the same base so it still reads as a chess piece; what's on top says who it is. -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <!-- Runner (pawn): the takeaway coffee they're always fetching -->
+    <!-- Runner (pawn): the takeaway coffee they're always fetching, FCC on the sleeve -->
     <symbol id="pc-p" viewBox="0 0 40 40">
       <g class="pl pf">
-        <path d="M12 36.5h16v-1.8q0-1.7-1.7-1.7h-12.6q-1.7 0-1.7 1.7z"/>
-        <path d="M14.6 19.5h10.8l-1.5 13.5h-7.8z"/>
-        <path d="M15.8 16q0-2.6 2.2-2.6h4q2.2 0 2.2 2.6z"/>
-        <rect x="13.2" y="16" width="13.6" height="3.8" rx="1.3"/>
+        <path d="M11.6 9.4q0-3.2 3-3.2h10.8q3 0 3 3.2z"/>
+        <path d="M9.8 12.6h20.4l-2.5 22.6q-.200 1.3-1.5 1.3h-12.4q-1.3 0-1.5-1.3z"/>
+        <rect x="8" y="9.2" width="24" height="3.8" rx="1.5"/>
       </g>
-      <path class="pd" d="M15.3 23.2h9.4l-.600 5.2h-8.2z"/>
+      <path class="pl pd" d="M9.9 18.6h20.2l-1.2 10.8h-17.8z"/>
+      <path class="cupt" d="M13.4 26.9v-5.8h3.5M13.4 23.9h2.7M22.3 22.2a2.5 2.9 0 1 0 0 3.7M27.8 22.2a2.5 2.9 0 1 0 0 3.7"/>
     </symbol>
-    <!-- Camera (rook): runs in straight lines, like a dolly on its track -->
+    <!-- Camera (rook): a camera on its dolly, running in straight lines down the track -->
     <symbol id="pc-r" viewBox="0 0 40 40">
+      <path class="rail" d="M3.5 37.2h33"/>
+      <path class="rail" d="M8 27.2v-9h-3.2"/>
       <g class="pl pf">
-        <path d="M10 36.5h20v-1.8q0-1.7-1.7-1.7h-16.6q-1.7 0-1.7 1.7z"/>
-        <rect x="15.5" y="29.5" width="6" height="3.7"/>
-        <circle cx="13.4" cy="12.8" r="5.6"/><circle cx="24" cy="13.8" r="4.6"/>
-        <rect x="7.6" y="18" width="20" height="12" rx="1.8"/>
-        <path d="M27.6 21.8l6.2-3v10.4l-6.2-3z"/>
+        <circle cx="12" cy="33.6" r="3"/><circle cx="28" cy="33.6" r="3"/>
+        <rect x="5.5" y="27" width="29" height="3.8" rx="1.3"/>
+        <rect x="18" y="20.5" width="5" height="7"/>
+        <rect x="14.5" y="18.8" width="12" height="2.6" rx="1.1"/>
+        <circle cx="14" cy="6.4" r="4"/><circle cx="22" cy="6.9" r="3.4"/>
+        <rect x="9" y="9.6" width="18" height="9.6" rx="1.6"/>
+        <path d="M27 12.4l6.5-2.6v9.2l-6.5-2.6z"/>
       </g>
-      <g class="pd"><circle cx="13.4" cy="12.8" r="1.7"/><circle cx="24" cy="13.8" r="1.5"/><rect x="10.6" y="21.2" width="7.5" height="2.4" rx="1.2"/></g>
+      <g class="pd"><circle cx="14" cy="6.4" r="1.3"/><circle cx="22" cy="6.9" r="1.1"/><circle cx="12" cy="33.6" r="1"/><circle cx="28" cy="33.6" r="1"/><rect x="11.6" y="12.4" width="7" height="2.2" rx="1.1"/></g>
     </symbol>
-    <!-- Stunt (knight): the stunt horse, jumping over everyone -->
+    <!-- Stunt (knight): the stunt horse, rearing up and jumping over everyone -->
     <symbol id="pc-n" viewBox="0 0 40 40">
-      <g class="pl pf">
-        <path d="M10 36.5h20v-1.8q0-1.7-1.7-1.7h-16.6q-1.7 0-1.7 1.7z"/>
-        <path d="M12.5 33c0-6 3.6-8.6 4.6-12.6-2.6 1-4.6 2.8-6.2 2.4-1.6-.4-2.2-2.4-1.2-4 2-3.2 4.6-6.2 7-8.6l-.6-3.8 3.6 2.2c5.8.2 10.6 4.8 11 12.8.2 4.6-1 8.4-1.4 11.6z"/>
-      </g>
-      <circle class="pd" cx="16.3" cy="14.3" r="1.250"/>
-      <path class="pds" d="M24 11.6q3.4 3.4 3.8 9M12 19.8l1.2.9"/>
+      <path class="pl pf" d="M10 36.5h20v-1.8q0-1.7-1.7-1.7h-16.6q-1.7 0-1.7 1.7z"/>
+      <path class="pl pf" d="M7 11.3C6 10.2 6.3 8.9 7.5 8.3L12.7 4.3 13.5 1.5 15.6 4 18.8 3.4 17.9 5.7 21.4 5.9 20.3 8.1 23.8 8.9 22.7 11.1 24.9 12.6C27.6 14.8 29.9 18 30.7 21.4 34.2 20.4 37.3 24 36.6 31.6 35.2 28.6 34 26.8 32 26.2 31.6 27.8 30.2 28.9 29.7 30L30.3 33H27.1L27.5 30C26.6 28.8 25.6 28 25.1 27.5L24.7 30.2 23.3 33H20.4L22 29.8 21.6 26.4C19.5 24.5 17 21.5 16 19.2L12.1 19.5 11.7 23.1H9.5L10 17.3 14.5 16.6 14.3 15.8 9.7 15.3 8.1 18.9 6.1 18.1 8.2 13 14.6 13.4C14.3 12.7 13.9 12 13.3 11.2 11.6 12.3 9 12.6 7 11.3Z"/>
+      <circle class="pd" cx="11.6" cy="7.6" r="1"/>
     </symbol>
     <!-- Boom (bishop): the furry mic, always coming in at an angle -->
     <symbol id="pc-b" viewBox="0 0 40 40">

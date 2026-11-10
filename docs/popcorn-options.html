@@ -109,7 +109,7 @@ p.lead{margin:0 0 18px;color:#444;font-size:15px;max-width:640px}
 
 <main>
   <h1>Popcorn options<span>.</span></h1>
-  <p class="lead">Four new designs for the popcorn piece in Pop &amp; Clap, each shown large, at the size it is on the board in the chat, and next to the clapperboard. The current piece is last, for comparison.</p>
+  <p class="lead">Four new designs for the popcorn piece in Pop &amp; Clap, each shown large, at the size it is on the board in the chat, and next to the clapperboard. The old all-gold piece is last, for comparison. <b>Steve picked B, the striped box, on 10 Nov 2026; it is the piece in the game now.</b></p>
   <div class="grid" id="grid"></div>
 </main>
 <script>
@@ -118,7 +118,7 @@ const OPTS = [
   ['B', 'pop-b', 'Striped box', 'The classic red-and-white cinema box, overflowing. The most instantly recognisable popcorn there is.'],
   ['C', 'pop-c', 'Kernel on stripes', 'A single kernel sitting on a red-and-white striped disc, so the piece itself looks like a popcorn box from above.'],
   ['D', 'pop-d', 'Handful of three', 'Three small kernels, white and buttery, on FCC orange. Popcorn reads better in a bunch.'],
-  ['Now', 'pop-now', 'Current piece', 'The all-gold kernel in the game today.'],
+  ['Now', 'pop-now', 'Old piece', 'The all-gold kernel the game used before.'],
 ];
 const use = (id, cls) => `<svg class="${cls || ''}" viewBox="0 0 40 40"><use href="#${id}"/></svg>`;
 const LAYOUT = ['c', 'p', '', 'p', 'c', 'p', 'p',  'c', 'c', 'p', 'c', 'p', 'c', 'c'];
