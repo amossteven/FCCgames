@@ -243,7 +243,7 @@ function makeCard(g, opts) {
   if (opts.live) card.id = 'gamecard';
   let status = '';
   if (g.over) { const w = g.over.winner == null ? null : g.seats[g.over.winner]; status = w == null ? 'Draw' : (w === ME ? 'You won' : `${data.players[w]} won`); if (w === ME) card.classList.add('won'); }
-  card.innerHTML = `<div class="gbar"><span class="title">${g.emoji} ${esc(g.title)}</span><span class="status">${esc(status)}</span>${CHEV}</div>
+  card.innerHTML = `<div class="gbar"><span class="title" title="${esc(g.title)}">${g.emoji} ${esc((data.games[g.game] && data.games[g.game].short) || g.title)}</span><span class="status">${esc(status)}</span>${CHEV}</div>
     <div class="gbody"><iframe ${opts.live ? 'id="gframe"' : ''} title="${esc(g.title)}" allow="autoplay"></iframe>
     <div class="gfoot"><span>${g.over ? (g.over.reason || 'Game over') : ''}</span>${opts.live ? '<button type="button" class="abandon">End game</button>' : ''}</div></div>`;
   card.querySelector('.gbar').onclick = () => {

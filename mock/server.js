@@ -12,7 +12,7 @@ const PLAYERS = (process.env.PLAYERS || 'Steve,Claude').split(',');
 
 const GAMES = {
   popclap: { file: 'pop-and-clap', title: 'Pop & Clap', emoji: '🎬', blurb: 'Connect four: clapperboards vs popcorn' },
-  chess: { file: 'chess', title: 'Lights, Camera, Chess!', emoji: '♟️', blurb: 'Chess with a film crew' },
+  chess: { file: 'chess', title: 'The Great British Chess Off', short: 'TGBCO', emoji: '♟️', blurb: 'Chess with a film crew' },
 };
 
 const fresh = () => ({ players: PLAYERS, messages: [], game: null, history: [], readAt: [0, 0], clappy: { best: [null, null], posts: [] } });

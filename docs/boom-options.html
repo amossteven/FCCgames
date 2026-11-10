@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boom options · The Great British Chess Off</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EFEBE4;--ink:#1B1B1B;--orange:#E8632B}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 40px}
+h1{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:30px;line-height:1;margin:0 0 6px}
+h1 span{color:var(--orange)}
+p.lead{margin:0 0 18px;color:#444;font-size:15px;max-width:680px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.opt{background:#FBF9F6;border:2px solid var(--ink);border-radius:18px;padding:14px;box-shadow:5px 5px 0 var(--ink)}
+.opt.now{opacity:.9;border-style:dashed;box-shadow:none}
+.opt h2{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:15px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.opt h2 b{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--orange);align-items:center;justify-content:center;font-size:13px}
+.opt p{margin:0 0 10px;font-size:13px;color:#555;min-height:50px}
+.big{display:flex;gap:8px;margin-bottom:10px}
+.tile{display:flex;align-items:center;justify-content:center;border-radius:10px}
+.big .tile{width:128px;height:128px}
+.rank{display:grid;grid-template-columns:repeat(8,1fr);border:3px solid var(--ink);border-radius:8px;overflow:hidden;margin-top:6px;max-width:304px}
+.rank .tile{aspect-ratio:1;border-radius:0}
+.L{background:#F6F0E4}.D{background:#E9925C}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- A: studio boom. Wheeled stand, long arm, counterweight, mic hanging off the end -->
+    <symbol id="boom-a" viewBox="0 0 40 40">
+      <path class="ln-o" style="--lw:1.8" d="M17 30.5L8.5 36M17 30.5L25.5 36"/><path class="ln-i" style="--lw:1.8" d="M17 30.5L8.5 36M17 30.5L25.5 36"/>
+      <path class="ln-o" style="--lw:2.6" d="M17 31V13"/><path class="ln-i" style="--lw:2.6" d="M17 31V13"/>
+      <path class="ln-o" style="--lw:2" d="M7 15.5L35 7"/><path class="ln-i" style="--lw:2" d="M7 15.5L35 7"/>
+      <g class="pl pf"><circle cx="8.5" cy="36.4" r="1.8"/><circle cx="25.5" cy="36.4" r="1.8"/>
+        <rect x="3.4" y="12.4" width="6.8" height="6.4" rx="1.3" transform="rotate(-17 6.8 15.6)"/>
+        <circle cx="17" cy="12.5" r="2.3"/></g>
+      <circle class="pd" cx="17" cy="12.5" r=".8"/>
+      <g transform="rotate(62 32 16)"><rect class="pl pf" x="25.6" y="12.6" width="12.8" height="6.8" rx="3.4"/>
+        <path class="pds" d="M28.4 14.6l1.2 1.2M31.4 14.2l1.2 1.2M34.4 14.6l1.2 1.2M29.9 16.8l1.2 1.2M32.9 16.8l1.2 1.2"/></g>
+    </symbol>
+    <!-- B: boom operator, pole held up and out over the action -->
+    <symbol id="boom-b" viewBox="0 0 40 40">
+      <path class="ln-o" style="--lw:2.6" d="M8 28.5L6.5 36.5M11 28.5L13 36.5"/><path class="ln-i" style="--lw:2.6" d="M8 28.5L6.5 36.5M11 28.5L13 36.5"/>
+      <g class="pl pf"><rect x="5.4" y="17.8" width="8.2" height="12" rx="2.6"/><circle cx="9.5" cy="13.2" r="3.4"/></g>
+      <path class="pds" d="M5.9 13a3.7 3.7 0 0 1 7.2 0"/>
+      <g class="pd"><rect x="5" y="12.2" width="1.7" height="2.8" rx=".8"/><rect x="12.3" y="12.2" width="1.7" height="2.8" rx=".8"/></g>
+      <path class="ln-o" style="--lw:1.8" d="M4.5 28.1L32 7.5"/><path class="ln-i" style="--lw:1.8" d="M4.5 28.1L32 7.5"/>
+      <path class="ln-o" style="--lw:2.2" d="M12 20.5L16.5 19.2M6.8 21L8.4 25.2"/><path class="ln-i" style="--lw:2.2" d="M12 20.5L16.5 19.2M6.8 21L8.4 25.2"/>
+      <g transform="rotate(68 32.2 14)"><rect class="pl pf" x="25.8" y="10.6" width="12.8" height="6.8" rx="3.4"/>
+        <path class="pds" d="M28.6 12.6l1.2 1.2M31.6 12.2l1.2 1.2M34.6 12.6l1.2 1.2M30.1 14.8l1.2 1.2M33.1 14.8l1.2 1.2"/></g>
+    </symbol>
+    <!-- C: the fluffy. Big shaggy windshield on a short pole -->
+    <symbol id="boom-c" viewBox="0 0 40 40">
+      <path class="ln-o" style="--lw:2.4" d="M14.5 25L6.5 36.5"/><path class="ln-i" style="--lw:2.4" d="M14.5 25L6.5 36.5"/>
+      <g transform="translate(23.5 15) rotate(-38)"><path class="pl pf" d="M-8.5 -5.0L-7.3 -7.8L-5.1 -5.0L-3.9 -7.0L-1.7 -5.0L-0.5 -8.2L1.7 -5.0L2.9 -7.4L5.1 -5.0L6.3 -7.8L8.5 -5.0L10.4 -6.6L11.7 -3.8L15.1 -4.1L13.4 -0.9L15.3 1.3L12.8 2.5L13.0 6.0L10.2 4.7L8.0 7.0L6.8 5.0L4.6 8.2L3.4 5.0L1.2 7.4L0.0 5.0L-2.2 7.8L-3.4 5.0L-5.6 7.0L-6.8 5.0L-9.0 8.2L-10.2 4.7L-13.8 5.7L-12.8 2.5L-16.7 1.4L-13.4 -0.9L-15.1 -3.5L-11.7 -3.8L-11.8 -7.7Z"/>
+        <path class="pds" d="M-8 -1.5q1.5 1.2 3 .2M-2.5 -2q1.5 1.2 3 .2M3.5 -1.5q1.5 1.2 3 .2M-5.5 1.8q1.5 1.2 3 .2M.5 1.5q1.5 1.2 3 .2M6 2q1.5 1 2.6 .2"/></g>
+    </symbol>
+    <!-- D: the sound department's cans -->
+    <symbol id="boom-d" viewBox="0 0 40 40">
+      <path class="ln-o" style="--lw:2.8" d="M8 23V18.5a12 12 0 0 1 24 0V23"/><path class="ln-i" style="--lw:2.8" d="M8 23V18.5a12 12 0 0 1 24 0V23"/>
+      <g class="pl pf"><rect x="4" y="20.5" width="8" height="14" rx="3.4"/><rect x="28" y="20.5" width="8" height="14" rx="3.4"/></g>
+      <g class="pd"><rect x="11.6" y="22.5" width="2.2" height="10" rx="1.1"/><rect x="26.2" y="22.5" width="2.2" height="10" rx="1.1"/></g>
+      <path class="pds" d="M6.8 24.5v6M33.2 24.5v6M14.5 9.3a10 10 0 0 1 11 0"/>
+    </symbol>
+    <!-- E: headphones with the fluffy mic on a short arm, both halves of the job -->
+    <symbol id="boom-e" viewBox="0 0 40 40">
+      <path class="ln-o" style="--lw:2.6" d="M7 21V17a11 11 0 0 1 22 0V21"/><path class="ln-i" style="--lw:2.6" d="M7 21V17a11 11 0 0 1 22 0V21"/>
+      <path class="ln-o" style="--lw:1.6" d="M7 30c0 5 6 6.5 13 4.5"/><path class="ln-i" style="--lw:1.6" d="M7 30c0 5 6 6.5 13 4.5"/>
+      <g class="pl pf"><rect x="3.4" y="19" width="7.4" height="12.5" rx="3.2"/><rect x="25.2" y="19" width="7.4" height="12.5" rx="3.2"/></g>
+      <g transform="translate(25.5 33.5) rotate(-12)"><path class="pl pf" d="M-3.2 -2.9L-1.6 -4.1L0.0 -2.9L1.6 -4.1L3.2 -2.9L5.2 -3.6L5.7 -1.4L7.3 0.0L5.7 1.4L5.2 3.6L3.2 2.9L1.6 4.1L0.0 2.9L-1.6 4.1L-3.2 2.9L-5.2 3.6L-5.7 1.5L-7.3 0.0L-5.7 -1.4L-5.2 -3.6Z"/></g>
+    </symbol>
+  </defs>
+</svg>
+<main>
+  <h1>Boom options<span>.</span></h1>
+  <p class="lead">Five alternatives for the Boom (the bishop) in The Great British Chess Off. Each is shown large in cream and black, then in its place on the back row at the size it is in the chat. The current piece is last.</p>
+  <div class="grid" id="grid"></div>
+</main>
+<script>
+const OPTS = [
+  ['A', 'boom-a', 'Studio boom', 'The TV studio kind: a wheeled stand with a long arm, a counterweight at the back and the mic hanging off the front.'],
+  ['B', 'boom-b', 'Boom operator', 'A boom op in headphones holding the pole up and out, mic dangling over the action. The only piece with a person in it.'],
+  ['C', 'boom-c', 'The fluffy', 'The furry windshield, big and shaggy, on a short length of pole. The most recognisable bit of a boom, close up.'],
+  ['D', 'boom-d', 'Headphones', "The sound department's cans. Not a boom at all, but the clearest sound icon at small sizes."],
+  ['E', 'boom-e', 'Cans and fluffy', 'Headphones with a small furry mic on an arm: both halves of the job in one piece.'],
+  ['Now', 'pc-b', 'Current piece', 'The angled pole with the mic tilted off the end.'],
+];
+const pc = (id, c) => `<svg class="pc ${c}" viewBox="0 0 40 40">${c === 'b' ? `<use class="under" href="#${id}"/>` : ''}<use href="#${id}"/></svg>`;
+const BACK = ['pc-r', 'pc-n', null, 'pc-q', 'pc-k', null, 'pc-n', 'pc-r'];
+const rank = (id, c, off) => `<div class="rank">${BACK.map((p, i) => `<div class="tile ${(i + off) % 2 ? 'D' : 'L'}">${pc(p || id, c)}</div>`).join('')}</div>`;
+// The pieces and their styles come straight from the game page, so this always shows the real set.
+fetch('../games/chess.html').then(r => r.text()).then(html => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const style = document.createElement('style'); style.textContent = [...doc.querySelectorAll('style')].map(s => s.textContent).join('\n').replace(/body\.bare[^{]*\{[^}]*\}/g, ''); document.head.append(style);
+  document.querySelector('svg defs').insertAdjacentHTML('beforeend', doc.querySelector('svg[aria-hidden] defs').innerHTML);
+  document.getElementById('grid').innerHTML = OPTS.map(([k, id, name, blurb]) => `
+    <div class="opt${k === 'Now' ? ' now' : ''}">
+      <h2>${k === 'Now' ? '' : `<b>${k}</b>`}${name}</h2><p>${blurb}</p>
+      <div class="big"><div class="tile D">${pc(id, 'w')}</div><div class="tile L">${pc(id, 'b')}</div></div>
+      ${rank(id, 'w', 0)}${rank(id, 'b', 1)}
+    </div>`).join('');
+});
+</script>
+</body>
+</html>

@@ -208,7 +208,7 @@ The frame never navigates or opens windows; it only draws and posts. Scores are 
 
 ---
 
-# Chess (working title "Lights, Camera, Chess!")
+# The Great British Chess Off (TGBCO)
 
 Built 10 Nov 2026, **not yet on the website**. It is a normal two-player turn game on the same engine and the same
 frozen protocol as Pop & Clap, so the site treats it exactly the same way: a folding card in the conversation,
@@ -219,7 +219,7 @@ frozen protocol as Pop & Clap, so the site treats it exactly the same way: a fol
 | File | `games/chess.html` (plus `shared/chess-rules.js`, loaded by the page) |
 | Engine id | `chess` — every saved state has `state.g === "chess"` |
 | Frame URL | `${FCC_GAMES_URL}/games/chess.html?embed=1&bare=1&origin=…&p0=…&p1=…&me=0|1[&new=1]#<state>` |
-| Catalogue entry | `{ id: "chess", file: "chess", title: <name Steve picks>, emoji: "♟️", blurb: "Chess with a film crew" }` |
+| Catalogue entry | `{ id: "chess", file: "chess", title: "The Great British Chess Off", short: "TGBCO", emoji: "♟️", blurb: "Chess with a film crew" }`. The full title is too long for the card bar next to the status pill in the 384 px widget, so the bar shows `short`; menus, thread lines and the Scoreboard use `title`. |
 | Turn order | Strictly alternating, seat 0 (the starter) first, so the site's "work out the next player itself" rule holds |
 | State size | A space-separated move list (`state.m`, about 5 characters a move) plus the usual fields. A 60-move game is under 1 KB; the 8 KB cap allows about 1,400 half-moves and the game calls a draw at 1,200 |
 | `over` | `{ winner: 0|1|null, reason, kind }` with `kind` one of `mate`, `stale`, `material`, `rep`, `fifty`, `long`, `resign` |
@@ -235,4 +235,4 @@ Things the game does itself, inside the frame:
 - **Piece set** (♞ button) switches between the film crew and classic chess symbols. It is a per-browser preference in the frame's localStorage; nothing is sent to the site.
 - The board is drawn from the viewer's side (`me`), cream at the bottom for seat 0, black for seat 1.
 
-The name is not final. The id `chess` and the file name will not change with it; only `title` in the catalogue and in `games/chess.html` (`const TITLE`) does.
+Steve named it on 10 Nov 2026. The id `chess` and the file name are fixed; the name lives only in the catalogue and in `games/chess.html` (`const TITLE`).
