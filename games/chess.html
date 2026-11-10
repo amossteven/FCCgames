@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lights, Camera, Chess! · FCC Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/fcc.css?v=4">
+<style>
+/* Board: FCC cream and orange squares in the same black-and-orange frame as Pop & Clap. */
+.chess{max-width:440px;margin:0 auto}
+body.bare .chess{max-width:304px}
+@media (min-width:480px){body.bare .chess{max-width:440px}}
+.cwrap{background:#1B1B1B;border:5px solid var(--orange);border-radius:14px;padding:5px;box-shadow:var(--shadow)}
+body.bare .cwrap{border-width:4px;padding:3px;box-shadow:none;border-radius:12px}
+.cb{display:grid;grid-template-columns:repeat(8,1fr);border-radius:7px;overflow:hidden;container-type:inline-size;touch-action:manipulation}
+.sq{aspect-ratio:1;position:relative;display:flex;align-items:center;justify-content:center;padding:0;margin:0;border:0;border-radius:0;background:#F6F0E4;font:inherit;-webkit-tap-highlight-color:transparent}
+.sq.d{background:#E9925C}
+.sq:not([disabled]){cursor:pointer}
+.sq.last::before{content:'';position:absolute;inset:0;background:rgba(242,181,68,.6)}
+.sq.sel::before{content:'';position:absolute;inset:0;background:#F2B544;box-shadow:inset 0 0 0 3px #1B1B1B}
+.sq.chk::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,#E0322B 30%,rgba(224,50,43,.25) 75%)}
+.sq.tgt::after{content:'';position:absolute;width:30%;height:30%;border-radius:50%;background:rgba(27,27,27,.32)}
+.sq.tgt.cap::after{width:88%;height:88%;background:none;box-shadow:inset 0 0 0 4px rgba(27,27,27,.4)}
+.co{position:absolute;font-size:8px;line-height:1;font-weight:800;color:#1B1B1B;opacity:.5;pointer-events:none}
+.co.r{left:2px;top:2px}.co.f{right:2px;bottom:2px}
+/* Film crew pieces: one fill colour, ink outline, a contrasting detail colour and a touch of gold. */
+.pc{position:relative;width:94%;height:94%;pointer-events:none;display:block}
+.pc.w{--pf:#FFF9EE;--pd:#1B1B1B}
+.pc.b{--pf:#1B1B1B;--pd:#F3EDE2}
+.pl{stroke:#1B1B1B;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.pf{fill:var(--pf)}
+.pd{fill:var(--pd)}
+.pds{fill:none;stroke:var(--pd);stroke-width:1.3;stroke-linecap:round}
+.pg{fill:#F2B544;stroke:#1B1B1B;stroke-width:.8;stroke-linejoin:round}
+.leg-o{fill:none;stroke:#1B1B1B;stroke-width:4.4}
+.leg-i{fill:none;stroke:var(--pf);stroke-width:1.6}
+/* Classic set: ordinary chess symbols, for anyone who prefers them */
+.pcg{position:relative;font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2","DejaVu Sans",sans-serif;font-size:10cqw;line-height:1;pointer-events:none}
+.pcg.w{color:#FFF9EE;text-shadow:-1px -1px 0 #1B1B1B,1px -1px 0 #1B1B1B,-1px 1px 0 #1B1B1B,1px 1px 0 #1B1B1B,0 1.5px 0 #1B1B1B,0 -1.5px 0 #1B1B1B,1.5px 0 0 #1B1B1B,-1.5px 0 0 #1B1B1B}
+.pcg.b{color:#1B1B1B}
+/* Bar under the board: status on the left, buttons on the right */
+.cbar{display:flex;align-items:center;gap:6px;min-height:34px;margin-top:6px}
+.cbar .txt{flex:1;min-width:0;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;line-height:1.2}
+.cbar .txt.alert{color:#C22B22}
+.swatch{flex:none;width:13px;height:13px;border-radius:4px;border:2px solid #1B1B1B}
+.swatch.w{background:#FFF9EE}.swatch.b{background:#1B1B1B}
+.ib{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:var(--panel);color:var(--text);font:800 14px Inter,sans-serif;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.ib:hover{background:var(--orange)}
+.ib.pick{width:36px;height:36px;border-radius:10px}
+.ib .pc{width:26px;height:26px}
+.ib .pcg{font-size:22px}
+.cbar .btn{padding:7px 12px;font-size:11px;white-space:nowrap}
+.chelp{margin-top:8px;border:2px solid var(--line);border-radius:12px;background:var(--panel);padding:10px 12px;font-size:13px}
+.chelp ul,.howto .crew+ul{margin:8px 0 0 16px;padding:0}
+.chelp li{margin:5px 0}
+.crew{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.crew span{display:flex;align-items:center;gap:6px;font-size:12px;line-height:1.15}
+.crew .pc{flex:none;width:28px;height:28px}
+.crew b{display:block}
+.crew i{font-style:normal;color:var(--muted)}
+body.bare h2{display:none}
+body.bare .panel.turn,body.bare .panel.boardonly{padding:0;border:0;box-shadow:none;background:transparent;margin:0}
+</style>
+</head>
+<body>
+<div id="fcc-header"></div>
+<!-- The crew. Every piece stands on the same base so it still reads as a chess piece; what's on top says who it is. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Runner (pawn): the takeaway coffee they're always fetching -->
+    <symbol id="pc-p" viewBox="0 0 40 40">
+      <g class="pl pf">
+        <path d="M12 36.5h16v-1.8q0-1.7-1.7-1.7h-12.6q-1.7 0-1.7 1.7z"/>
+        <path d="M14.6 19.5h10.8l-1.5 13.5h-7.8z"/>
+        <path d="M15.8 16q0-2.6 2.2-2.6h4q2.2 0 2.2 2.6z"/>
+        <rect x="13.2" y="16" width="13.6" height="3.8" rx="1.3"/>
+      </g>
+      <path class="pd" d="M15.3 23.2h9.4l-.600 5.2h-8.2z"/>
+    </symbol>
+    <!-- Camera (rook): runs in straight lines, like a dolly on its track -->
+    <symbol id="pc-r" viewBox="0 0 40 40">
+      <g class="pl pf">
+        <path d="M10 36.5h20v-1.8q0-1.7-1.7-1.7h-16.6q-1.7 0-1.7 1.7z"/>
+        <rect x="15.5" y="29.5" width="6" height="3.7"/>
+        <circle cx="13.4" cy="12.8" r="5.6"/><circle cx="24" cy="13.8" r="4.6"/>
+        <rect x="7.6" y="18" width="20" height="12" rx="1.8"/>
+        <path d="M27.6 21.8l6.2-3v10.4l-6.2-3z"/>
+      </g>
+      <g class="pd"><circle cx="13.4" cy="12.8" r="1.7"/><circle cx="24" cy="13.8" r="1.5"/><rect x="10.6" y="21.2" width="7.5" height="2.4" rx="1.2"/></g>
+    </symbol>
+    <!-- Stunt (knight): the stunt horse, jumping over everyone -->
+    <symbol id="pc-n" viewBox="0 0 40 40">
+      <g class="pl pf">
+        <path d="M10 36.5h20v-1.8q0-1.7-1.7-1.7h-16.6q-1.7 0-1.7 1.7z"/>
+        <path d="M12.5 33c0-6 3.6-8.6 4.6-12.6-2.6 1-4.6 2.8-6.2 2.4-1.6-.4-2.2-2.4-1.2-4 2-3.2 4.6-6.2 7-8.6l-.6-3.8 3.6 2.2c5.8.2 10.6 4.8 11 12.8.2 4.6-1 8.4-1.4 11.6z"/>
+      </g>
+      <circle class="pd" cx="16.3" cy="14.3" r="1.250"/>
+      <path class="pds" d="M24 11.6q3.4 3.4 3.8 9M12 19.8l1.2.9"/>
+    </symbol>
+    <!-- Boom (bishop): the furry mic, always coming in at an angle -->
+    <symbol id="pc-b" viewBox="0 0 40 40">
+      <g class="pl pf">
+        <path d="M10 36.5h20v-1.8q0-1.7-1.7-1.7h-16.6q-1.7 0-1.7 1.7z"/>
+        <rect x="18.2" y="24.5" width="3.6" height="8.7"/>
+        <rect x="14.8" y="23.2" width="10.4" height="3.2" rx="1.6"/>
+        <ellipse cx="20" cy="13.6" rx="6.6" ry="10"/>
+      </g>
+      <path class="pds" d="M16.6 9.2l1.6 1.6M21 6.6l1.6 1.6M18.6 13.8l1.6 1.6M22.6 11.6l1.6 1.6M16.8 18l1.6 1.6M21.4 17.6l1.6 1.6"/>
+    </symbol>
+    <!-- Star (queen): goes wherever they like -->
+    <symbol id="pc-q" viewBox="0 0 40 40">
+      <g class="pl pf">
+        <path d="M10 36.5h20v-1.8q0-1.7-1.7-1.7h-16.6q-1.7 0-1.7 1.7z"/>
+        <path d="M17 21h6l2 12h-10z"/>
+        <path d="M20 3.6L22.940 11.050 30.940 11.550 24.760 16.650 26.760 24.4 20 20.1 13.240 24.4 15.240 16.650 9.060 11.550 17.060 11.050Z"/>
+      </g>
+      <circle class="pg" cx="20" cy="14.4" r="2.7"/>
+    </symbol>
+    <!-- Director (king): the chair. Lose it and it's a wrap. -->
+    <symbol id="pc-k" viewBox="0 0 40 40">
+      <path class="leg-o" d="M12 25.5l16 7.5M28 25.5l-16 7.5"/>
+      <path class="leg-i" d="M12 25.5l16 7.5M28 25.5l-16 7.5"/>
+      <g class="pl pf">
+        <rect x="10.4" y="5.4" width="3" height="17"/><rect x="26.6" y="5.4" width="3" height="17"/>
+        <rect x="10.4" y="6.8" width="19.2" height="8" rx="1"/>
+        <rect x="8.2" y="16.8" width="7.2" height="2.6" rx="1.2"/><rect x="24.6" y="16.8" width="7.2" height="2.6" rx="1.2"/>
+        <rect x="9.2" y="21.4" width="21.6" height="4.4" rx="1"/>
+        <path d="M10 36.5h20v-1.8q0-1.7-1.7-1.7h-16.6q-1.7 0-1.7 1.7z"/>
+      </g>
+      <path class="pg" d="M20 7.9L20.730 9.790 22.760 9.9 21.190 11.190 21.7 13.150 20 12.050 18.3 13.150 18.810 11.190 17.240 9.9 19.270 9.790Z"/>
+    </symbol>
+  </defs>
+</svg>
+<main id="app" class="wrap"></main>
+<script src="../shared/fcc.js?v=9"></script>
+<script src="../shared/chess-rules.js?v=1"></script>
+<script>
+const R = ChessRules;
+const TITLE = 'Lights, Camera, Chess!';
+const NAMES = { k: 'Director', q: 'Star', r: 'Camera', b: 'Boom', n: 'Stunt', p: 'Runner' };
+const CLASSIC = { k: 'King', q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight', p: 'Pawn' };
+const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+const UNIT = ['Main Unit', 'Second Unit'], SHADE = ['cream', 'black'];
+const REASON = {
+  mate: "Checkmate. That's a wrap!",
+  stale: 'Stalemate: creative differences. A draw.',
+  material: 'Not enough crew left to finish the shoot. A draw.',
+  rep: 'Same scene, take three. A draw by repetition.',
+  fifty: 'Fifty moves with no action, so the studio pulled the plug. A draw.',
+  long: 'The shoot ran over schedule. A draw.',
+};
+let SET = 'film'; try { SET = localStorage.getItem('fcc-chess-set') || 'film'; } catch (e) { /* default */ }
+let helpOpen = false;
+const pname = t => (SET === 'classic' ? CLASSIC : NAMES)[t];
+const SVGNS = 'http://www.w3.org/2000/svg';
+function pieceEl(ch) {
+  const w = ch < 'a', t = ch.toLowerCase();
+  if (SET === 'classic') return FCC.h('span', { class: 'pcg ' + (w ? 'w' : 'b'), 'aria-hidden': 'true' }, GLYPH[t] + '︎');
+  const s = document.createElementNS(SVGNS, 'svg'); s.setAttribute('class', 'pc ' + (w ? 'w' : 'b')); s.setAttribute('viewBox', '0 0 40 40'); s.setAttribute('aria-hidden', 'true');
+  const u = document.createElementNS(SVGNS, 'use'); u.setAttribute('href', '#pc-' + t); s.append(u); return s;
+}
+function newState(players, seed) { return { p: players, seed, m: '', n: 0 }; }
+
+/* The board, drawn from the viewer's side. o = { view, last, sel, targets, check, onSq } */
+function boardEl(b, o) {
+  const grid = FCC.h('div', { class: 'cb', role: 'group', 'aria-label': 'Chess board' });
+  for (let k = 0; k < 64; k++) {
+    const i = o.view === 1 ? 63 - k : k, f = i & 7, r = i >> 3, ch = b[i];
+    const tg = o.targets ? o.targets.find(m => m.to === i) : null;
+    const cls = ['sq', (f + r) & 1 ? 'd' : 'l'];
+    if (o.last && (o.last.from === i || o.last.to === i)) cls.push('last');
+    if (o.sel === i) cls.push('sel');
+    if (o.check === i) cls.push('chk');
+    if (tg) { cls.push('tgt'); if (ch !== '.' || tg.ep) cls.push('cap'); }
+    const label = R.sqName(i) + (ch === '.' ? '' : `, ${SHADE[R.colorOf(ch)]} ${pname(ch.toLowerCase())}`) + (tg ? ', you can move here' : '');
+    const sq = FCC.h('button', { type: 'button', class: cls.join(' '), 'aria-label': label, disabled: !o.onSq, onClick: o.onSq ? () => o.onSq(i) : null });
+    if (k % 8 === 0) sq.append(FCC.h('span', { class: 'co r' }, String(8 - r)));
+    if (k >= 56) sq.append(FCC.h('span', { class: 'co f' }, 'abcdefgh'[f]));
+    if (ch !== '.') sq.append(pieceEl(ch));
+    grid.append(sq);
+  }
+  return FCC.h('div', { class: 'cwrap' }, grid);
+}
+const HOWTO = () => `<div class="crew">${'kqrbnp'.split('').map(t => `<span><svg class="pc w" viewBox="0 0 40 40"><use href="#pc-${t}"/></svg><span><b>${NAMES[t]}</b><i>${CLASSIC[t]}</i></span></span>`).join('')}</div>
+  <ul>
+    <li>It's chess with a film crew. Every piece moves exactly as it does in chess: the <b>Camera</b> tracks in straight lines, the <b>Boom</b> swings in on the diagonal, the <b>Stunt</b> jumps, the <b>Star</b> goes wherever they like, and a <b>Runner</b> who makes it to the far end gets promoted.</li>
+    <li>Whoever starts plays the cream <b>Main Unit</b> and moves first. The other player is the black <b>Second Unit</b>.</li>
+    <li>Tap a piece, tap a highlighted square, then press <b>Play</b>. You can undo until you press Play.</li>
+    <li>Castling (Director two squares towards a Camera) and en passant work as usual.</li>
+    <li>Checkmate the Director and it's a wrap. Draws: stalemate, the same position three times, fifty moves without a capture or a Runner move, or too few pieces left to mate.</li>
+    <li><b>♞</b> switches between the film crew and classic chess pieces, just for you. <b>⚑</b> resigns on your turn.</li>
+  </ul>`;
+const helpEl = () => (helpOpen && FCC.compact ? FCC.h('div', { class: 'chelp', html: HOWTO() }) : null);
+/* Buttons every view gets: how to play (only inside the chat card; the full page has its own panel) and the piece set. */
+function tools(redraw) {
+  return [
+    FCC.compact ? FCC.h('button', { type: 'button', class: 'ib', title: 'How to play', 'aria-label': 'How to play', 'aria-expanded': String(helpOpen), onClick: () => { FCC.sfx.click(); helpOpen = !helpOpen; redraw(); } }, '?') : null,
+    FCC.h('button', { type: 'button', class: 'ib', title: SET === 'classic' ? 'Switch to film crew pieces' : 'Switch to classic chess pieces', 'aria-label': SET === 'classic' ? 'Switch to film crew pieces' : 'Switch to classic chess pieces',
+      onClick: () => { FCC.sfx.click(); SET = SET === 'classic' ? 'film' : 'classic'; try { localStorage.setItem('fcc-chess-set', SET); } catch (e) { /* ignore */ } redraw(); } }, SET === 'classic' ? '🎬' : '♞︎'),
+  ];
+}
+const bar = (text, cls, ...kids) => FCC.h('div', { class: 'cbar' }, FCC.h('div', { class: 'txt' + (cls ? ' ' + cls : '') }, text), kids);
+const broken = bad => FCC.h('div', { class: 'panel warn' }, FCC.h('h2', {}, 'This game link is damaged'), FCC.h('p', {}, `The move list couldn't be replayed (stopped at "${bad}").`));
+
+/* One line for the chat and the result card: who moved what, in crew terms, with the chess notation in brackets. */
+function describe(state, pos, m, sanTxt, next, out) {
+  const who = state.p[pos.turn], piece = pos.b[m.from].toLowerCase(); let t;
+  if (m.castle) t = `${who} castled ${m.castle === 'K' ? 'short' : 'long'}, tucking the Director behind a Camera`;
+  else {
+    const taken = m.ep ? 'p' : pos.b[m.to].toLowerCase();
+    t = taken !== '.' ? `${who}'s ${NAMES[piece]} took a ${NAMES[taken]} on ${R.sqName(m.to)}` : `${who}'s ${NAMES[piece]} to ${R.sqName(m.to)}`;
+    if (m.promo) t += ` and was promoted to ${NAMES[m.promo]}`;
+  }
+  t += ` (${sanTxt}).`;
+  if (out) t += out.kind === 'mate' ? ' Checkmate!' : ' Draw.'; else if (R.inCheck(next)) t += ' Check!';
+  return t;
+}
+
+function renderTurn(state, api, root) {
+  const me = state.n, you = 1 - me;
+  const game = R.replay(state.m);
+  if (!game.ok) { root.append(broken(game.bad)); return; }
+  const pos = game.pos, moves = R.legal(pos), check = R.inCheck(pos);
+  let sel = -1, pend = null, picks = null, resign = false;
+  root.append(FCC.replayPanel(state));
+  const panel = FCC.h('div', { class: 'panel accent turn' });
+  const sw = () => FCC.h('span', { class: 'swatch ' + (me === 0 ? 'w' : 'b'), title: `You are the ${SHADE[me]} ${UNIT[me]}` });
+  const tap = i => {
+    if (sel >= 0) {
+      const ms = moves.filter(m => m.from === sel && m.to === i);
+      if (ms.length) { FCC.sfx.drop(); if (ms.length > 1) picks = ms; else pend = ms[0]; sel = -1; draw(); return; }
+    }
+    sel = (i !== sel && R.colorOf(pos.b[i]) === me && moves.some(m => m.from === i)) ? i : -1;
+    if (sel >= 0) FCC.sfx.tick();
+    draw();
+  };
+  const play = () => {
+    const m = pend, sanTxt = R.san(pos, m, moves), next = R.make(pos, m);
+    const k = R.key(next), seen = (game.counts[k] || 0) + 1;
+    let out = R.outcome(next, seen);
+    if (!out && game.plies + 1 >= 1200) out = { kind: 'long', winner: null };
+    state.m = (state.m ? state.m + ' ' : '') + R.moveStr(m);
+    if (out) state.over = { winner: out.winner, reason: REASON[out.kind], kind: out.kind }; else state.n = you;
+    api.commit({ by: me, text: describe(state, pos, m, sanTxt, next, out), san: sanTxt });
+  };
+  const walkOff = () => {
+    state.over = { winner: you, reason: `${state.p[me]} walked off set. ${state.p[you]} wins.`, kind: 'resign' };
+    api.commit({ by: me, text: `${state.p[me]} walked off set and resigned.`, san: '' });
+  };
+  const draw = () => {
+    panel.innerHTML = '';
+    const shown = pend ? R.make(pos, pend).b : (picks ? R.make(pos, picks[0]).b.map((c, i) => (i === picks[0].to ? pos.b[picks[0].from] : c)) : pos.b);
+    const moving = pend || (picks && picks[0]);
+    let b;
+    if (resign) b = bar('Walk off set and resign?', 'alert',
+      FCC.h('button', { class: 'btn ghost sm', onClick: () => { resign = false; draw(); } }, 'NO'),
+      FCC.h('button', { class: 'btn primary sm', onClick: () => { FCC.sfx.bad(); walkOff(); } }, 'RESIGN'));
+    else if (picks) b = bar('Promote your ' + pname('p') + ':', '',
+      picks.map(m => FCC.h('button', { type: 'button', class: 'ib pick', title: pname(m.promo), 'aria-label': 'Promote to ' + pname(m.promo), onClick: () => { FCC.sfx.good(); pend = m; picks = null; draw(); } }, pieceEl(me === 0 ? m.promo.toUpperCase() : m.promo))),
+      FCC.h('button', { type: 'button', class: 'ib', title: 'Undo', 'aria-label': 'Undo', onClick: () => { picks = null; draw(); } }, '↩'));
+    else if (pend) b = bar(`${pname(pos.b[pend.from].toLowerCase())} ${pend.castle ? 'castles' : 'to ' + R.sqName(pend.to)}${pend.promo ? ', now a ' + pname(pend.promo) : ''}`, '',
+      FCC.h('button', { class: 'btn ghost sm', onClick: () => { FCC.sfx.click(); pend = null; draw(); } }, '↩ UNDO'),
+      FCC.h('button', { class: 'btn primary sm', onClick: play }, '▶ PLAY'));
+    else b = bar([sw(), check ? `Check! Save your ${pname('k')}` : (game.plies < 2 ? `You're the ${SHADE[me]} ${UNIT[me]}` : 'Your move')], check ? 'alert' : '',
+      tools(draw),
+      FCC.h('button', { type: 'button', class: 'ib', title: 'Resign', 'aria-label': 'Resign', onClick: () => { FCC.sfx.click(); resign = true; draw(); } }, '⚑︎'));
+    panel.append(
+      FCC.h('h2', {}, `Your move, ${state.p[me]} — you're the ${SHADE[me]} ${UNIT[me]}`),
+      FCC.h('div', { class: 'chess' },
+        boardEl(shown, { view: me, last: moving || game.last, sel, targets: sel >= 0 ? moves.filter(m => m.from === sel) : null,
+          check: check && !moving ? R.kingSq(pos.b, me) : -1, onSq: moving || resign ? null : tap }),
+        b, helpEl()));
+  };
+  draw(); root.append(panel);
+}
+
+/* Board for the player who isn't moving, and for the finished game. */
+function renderBoard(state) {
+  const el = FCC.h('div', { class: 'panel boardonly' });
+  const game = R.replay(state.m);
+  if (!game.ok) return broken(game.bad);
+  const view = FCC.me != null ? FCC.me : (state.last ? state.last.by : 0);
+  const draw = () => {
+    el.innerHTML = '';
+    const inCheck = R.inCheck(game.pos);
+    const text = state.over ? (state.last && state.last.san ? `Final move: ${state.last.san}` : 'Game over')
+      : !state.last ? `Waiting for ${state.p[state.n]} to open` : `${state.last.by === view ? 'You' : state.p[state.last.by]} played ${state.last.san}${inCheck ? ' · check!' : ''}`;
+    el.append(FCC.h('div', { class: 'chess' },
+      boardEl(game.pos.b, { view, last: game.last, check: inCheck ? R.kingSq(game.pos.b, game.pos.turn) : -1 }),
+      bar(text, '', tools(draw)), helpEl()));
+  };
+  draw(); return el;
+}
+
+FCC.app({
+  id: 'chess', title: TITLE, emoji: '♟️',
+  blurb: 'Chess with a film crew: Directors, Stars, Cameras, Booms, Stunts and Runners. Checkmate is a wrap.',
+  howTo: FCC.compact ? '' : HOWTO(),
+  newState, renderTurn, renderBoard
+});
+</script>
+</body>
+</html>
